@@ -20,6 +20,9 @@ var _ io.Reader = &File{}
 type Renderable struct {
 	afero.File
 
+	// Data is the data set to be used when compiling variables into the html
+	Data map[string]interface{}
+
 	// del represents the current delimiter
 	del []byte
 
@@ -63,7 +66,18 @@ func (r *Renderable) Read(p []byte) (int, error) {
 	}
 	if ma == exMatch {
 		v := append(r.tru, b[:len(b)-len(del)]...)
-		log.Printf("mat:%s", string(v))
+
+		// when we find a matching rdelim, {{..}} has been closed and we can now
+		// parse for the var value
+		if bytes.Equal(del, rdelim) {
+			log.Printf("mat:%s", string(v))
+			dat, ok := r.Data[string(v)]
+			if ok {
+				v = []byte(dat.(string))
+			} else {
+				v = v[:0]
+			}
+		}
 
 		// truncate if v is longer than our given reader bytes
 		if len(v) > lenp {
@@ -76,23 +90,23 @@ func (r *Renderable) Read(p []byte) (int, error) {
 
 		r.buf = r.buf[len(b):] // trim buffer
 
-		log.Printf("mat:%s", string(v))
+		// log.Printf("mat:%s", string(v))
 		log.Printf("buf:%s", string(r.buf))
 
 		swapDelim(r)
 	}
-
-	// attempt to flush the rest of the buffer
-	if r.eof {
+	if ma == noMatch {
 		if len(r.buf) > lenp {
 			p = append(p, r.buf[:lenp]...)
 			r.buf = r.buf[lenp:]
 		} else {
 			p = append(p, r.buf...)
 			r.buf = r.buf[:0]
-
-			return len(p), io.EOF
 		}
+	}
+
+	if r.eof && len(r.buf) == 0 {
+		return len(p), io.EOF
 	}
 
 	return len(p), nil
