@@ -20,8 +20,8 @@ type Renderable struct {
 	// attempt an exact match on the next read
 	buf []byte
 
-	// tru holds bytes that were truncated due to the len of the reader bytes
-	tru []byte
+	// truncd holds bytes that were truncated due to length of p
+	truncd []byte
 
 	// eof marks the File has reached EOF.
 	eof bool
@@ -31,14 +31,21 @@ var _ io.Reader = &Renderable{}
 
 func (r *Renderable) Read(p []byte) (int, error) {
 	lenp := len(p)
-	buf := make([]byte, lenp)
-
 	p = p[:0]
+
+	if len(r.truncd) > 0 {
+		n := flush(&r.truncd, &p, lenp)
+
+		// see if there is any buffer left to write to
+		if lenp = lenp - n; lenp == 0 {
+			return n, nil
+		}
+	}
+	buf := make([]byte, lenp)
 
 	n, err := r.File.Read(buf)
 	if err != nil && err != io.EOF {
-		// TODO must still read what was read to p
-		return 0, err
+		return n, err
 	}
 	if !r.eof {
 		r.eof = (err == io.EOF)
@@ -47,20 +54,19 @@ func (r *Renderable) Read(p []byte) (int, error) {
 	r.buf = append(r.buf, buf[:n]...)
 	del := r.delim()
 
-	// log.Printf("buf:%s", string(r.buf))
-	// log.Printf("del:%s", string(del))
-
 	b, ma := matchdel(r.buf, del)
-	if ma == paMatch {
+	switch ma {
+	case paMatch:
 		r.buf = b
-	}
-	if ma == exMatch {
-		v := append(r.tru, b[:len(b)-len(del)]...)
+
+	case exMatch:
+		v := b[:len(b)-len(del)]
 
 		// when we find a matching rdelim, {{..}} has been closed and we can now
 		// parse for the var value
 		if bytes.Equal(del, rdelim) {
 			log.Printf("mat:%s", string(v))
+
 			dat, ok := r.Data[string(v)]
 			if ok {
 				v = []byte(dat.(string))
@@ -69,13 +75,16 @@ func (r *Renderable) Read(p []byte) (int, error) {
 			}
 		}
 
+		// combine truncated with current value to be written
+		v = append(r.truncd, v...)
+
 		// truncate if v is longer than our given reader bytes
 		if len(v) > lenp {
 			p = append(p, v[:lenp]...)
-			r.tru = v[lenp:]
+			r.truncd = v[lenp:]
 		} else {
 			p = append(p, v...)
-			r.tru = r.tru[:0]
+			r.truncd = r.truncd[:0]
 		}
 
 		r.buf = r.buf[len(b):] // trim buffer
@@ -84,15 +93,9 @@ func (r *Renderable) Read(p []byte) (int, error) {
 		log.Printf("buf:%s", string(r.buf))
 
 		swapDelim(r)
-	}
-	if ma == noMatch {
-		if len(r.buf) > lenp {
-			p = append(p, r.buf[:lenp]...)
-			r.buf = r.buf[lenp:]
-		} else {
-			p = append(p, r.buf...)
-			r.buf = r.buf[:0]
-		}
+
+	default:
+		flush(&r.buf, &p, lenp)
 	}
 
 	if r.eof && len(r.buf) == 0 {
@@ -109,6 +112,23 @@ func (r *Renderable) delim() []byte {
 	}
 
 	return r.del
+}
+
+// flush b to out up to n
+func flush(b, out *[]byte, n int) int {
+	var (
+		_b   = *b
+		_out = *out
+	)
+	if len(_b) > n {
+		*out = append(_out, _b[:n]...)
+		*b = _b[n:]
+	} else {
+		*out = append(_out, _b...)
+		*b = _b[:0]
+	}
+
+	return len(*out)
 }
 
 // swapDelim swaps the delim on a Renderable.

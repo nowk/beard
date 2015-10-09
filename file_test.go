@@ -3,101 +3,91 @@ package beard
 import (
 	"bytes"
 	"io"
-	"reflect"
 	"testing"
-
-	"github.com/spf13/afero"
 )
 
-func TestRenderable(t *testing.T) {
-	t.Skip()
+func TestRenderableBufOut(t *testing.T) {
+	file := bytes.NewBufferString(`<h1>Hello {{c}}</h1>`)
 
-	f := afero.MemFileCreate("-")
-	f.WriteString(`<h1>hello {{c}}</h1>`)
-	f.Seek(0, 0)
-
-	fi := &Renderable{File: f}
-
-	{
-		b := make([]byte, 11)
-
-		var exp = []byte(`<h1>hello {`)
-
-		n, err := fi.Read(b)
-		if err != nil {
-			t.Errorf("expected no error, got %s", err)
-		}
-		if n != 0 {
-			t.Errorf("expected 0 bytes read, got %d", n)
-		}
-		if got := fi.buf; !reflect.DeepEqual(exp, got) {
-			t.Errorf("expected %s, got %s", string(exp), string(got))
-		}
+	rend := &Renderable{
+		File: file,
+		Data: map[string]interface{}{
+			"c": "world!",
+		},
 	}
 
-	{
-		b := make([]byte, 9)
-
-		var exp = []byte(`<h1>hello`)
-
-		n, err := fi.Read(b)
-		if err != nil {
-			t.Errorf("expected no error, got %s", err)
-		}
-		if n != 9 {
-			t.Errorf("expected 9 bytes read, got %d", n)
-		}
-		if got := b[:n]; !reflect.DeepEqual(exp, got) {
-			t.Errorf("expected %s, got %s", string(exp), string(got))
-		}
-		if got := fi.buf; !reflect.DeepEqual([]byte("c}}</h1>"), got) {
-			t.Errorf("expected %s, got %s", "c}}</h1>", string(got))
-		}
+	var cases = []struct {
+		n      int
+		nread  int
+		buf    string
+		truncd string
+		out    string
+		err    error
+	}{
+		{5, 5, "", "", "<h1>H", nil},
+		{6, 0, "ello {", "", "", nil},
+		{3, 3, "c}", "o ", "ell", nil},
+		{3, 3, "", "orld!", "o w", nil},
+		{3, 3, "", "d!", "orl", nil},
+		{15, 7, "", "", "d!</h1>", nil},
+		{3, 0, "", "", "", io.EOF},
 	}
 
-	{
-		b := make([]byte, 9)
+	i := 0
+	for {
+		if i > len(cases)-1 {
+			break
+		}
+		var exp = cases[i]
 
-		var exp = []byte(` c</h1>`)
+		buf := make([]byte, exp.n)
 
-		n, err := fi.Read(b)
-		if err != io.EOF {
-			t.Errorf("expected EOF error, got %s", err)
+		n, err := rend.Read(buf)
+		if err != exp.err {
+			t.Errorf("expected %s  error, got %s", exp.err, err)
 		}
-		if n != 7 {
-			t.Errorf("expected 7 bytes read, got %d", n)
+		if got := n; exp.nread != got {
+			t.Errorf("expected to read %d bytes, read %d", exp.nread, got)
 		}
-		if got := b[:n]; !reflect.DeepEqual(exp, got) {
-			t.Errorf("expected %s, got %s", string(exp), string(got))
+		if got := string(rend.buf); exp.buf != got {
+			t.Errorf("expected buf %s, got %s", exp.buf, got)
 		}
+		if got := string(rend.truncd); exp.truncd != got {
+			t.Errorf("expected truncd %s, got %s", exp.truncd, got)
+		}
+		if got := string(buf[:n]); exp.out != got {
+			t.Errorf("expected out %s, got %s", exp.out, got)
+		}
+
+		i++
+	}
+
+	if exp := len(cases); exp != i {
+		t.Errorf("expected %d cases, executed %d", exp, i)
 	}
 }
 
-func TestRenderable2(t *testing.T) {
-	f := afero.MemFileCreate("-")
-	f.WriteString(`<h1>hello {{c}}{{d}}</h1>`)
-	f.Seek(0, 0)
+func TestRenderableReader(t *testing.T) {
+	file := bytes.NewBufferString(`<h1>Hello {{c}}{{d}}</h1>`)
 
-	data := map[string]interface{}{
-		"c": "world!",
+	rend := &Renderable{
+		File: file,
+		Data: map[string]interface{}{
+			"c": "World!",
+		},
 	}
 
-	fi := &Renderable{File: f, Data: data}
+	var exp = `<h1>Hello World!</h1>`
 
-	b := bytes.NewBuffer(nil)
-
-	var exp = `<h1>hello world!</h1>`
-
-	n, err := io.Copy(b, fi)
+	buf := bytes.NewBuffer(nil)
+	n, err := io.Copy(buf, rend)
 	if err != nil {
 		t.Errorf("expected no error, got %s", err)
 	}
-
-	if n != 21 {
-		t.Errorf("expected 22 bytes read, got %d", n)
+	if exp := int64(21); exp != n {
+		t.Errorf("expected %d bytes read, got %d", exp, n)
 	}
-
-	if got := b.String(); !reflect.DeepEqual(exp, got) {
-		t.Errorf("expected %s, got %s", string(exp), string(got))
+	if got := buf.String(); exp != got {
+		t.Errorf("expected %s, got %s", exp, got)
 	}
 }
