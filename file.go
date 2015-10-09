@@ -4,21 +4,11 @@ import (
 	"bytes"
 	"io"
 	"log"
-
-	"github.com/spf13/afero"
 )
 
-type File struct {
-	afero.File
-
-	Pwd          string
-	TemplateRoot string
-}
-
-var _ io.Reader = &File{}
-
 type Renderable struct {
-	afero.File
+	// File is the template file to be rendered
+	File io.Reader
 
 	// Data is the data set to be used when compiling variables into the html
 	Data map[string]interface{}
