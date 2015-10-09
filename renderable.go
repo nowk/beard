@@ -7,7 +7,8 @@ import (
 )
 
 type Renderable struct {
-	// File is the template file to be rendered
+	// File is the template file to be rendered. File must be explicitly closed
+	// by the user
 	File io.Reader
 
 	// Data is the data set to be used when compiling variables into the html

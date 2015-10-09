@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func TestRenderableBufOut(t *testing.T) {
+func TestRenderableBufTruncdOut(t *testing.T) {
 	file := bytes.NewBufferString(`<h1>Hello {{c}}</h1>`)
 
 	rend := &Renderable{
