@@ -7,7 +7,8 @@ import (
 )
 
 func TestRenderableBufTruncdOut(t *testing.T) {
-	file := bytes.NewBufferString(`<h1>Hello {{c}}</h1>`)
+	// file := bytes.NewReader([]byte(`<h1>Hello {{c}}</h1>`))
+	file := bytes.NewReader([]byte(`<h1>Hello {{c}}</h1>`))
 
 	rend := &Renderable{
 		File: file,
@@ -69,7 +70,7 @@ func TestRenderableBufTruncdOut(t *testing.T) {
 }
 
 func TestRenderableReader(t *testing.T) {
-	file := bytes.NewBufferString(`<h1>Hello {{word}}{{d}}</h1>`)
+	file := bytes.NewReader([]byte(`<h1>Hello {{word}}{{d}}</h1>`))
 
 	rend := &Renderable{
 		File: file,
@@ -86,6 +87,34 @@ func TestRenderableReader(t *testing.T) {
 		t.Errorf("expected no error, got %s", err)
 	}
 	if exp := int64(21); exp != n {
+		t.Errorf("expected %d bytes read, got %d", exp, n)
+	}
+	if got := buf.String(); exp != got {
+		t.Errorf("expected %s, got %s", exp, got)
+	}
+}
+
+func TestRenderableArrays(t *testing.T) {
+	// file := bytes.NewReader([]byte(`{{#words}}({{.}})({{.}}){{#more_words}}<{{.}}>{{/more_words}}{{/words}}`))
+	file := bytes.NewReader([]byte(`{{#words}}({{.}})({{.}}){{/words}}`))
+
+	rend := &Renderable{
+		File: file,
+		Data: map[string]interface{}{
+			"words": []interface{}{
+				"a", "b", "c",
+			},
+		},
+	}
+
+	var exp = `(a)(a)(b)(b)(c)(c)`
+
+	buf := bytes.NewBuffer(nil)
+	n, err := io.Copy(buf, rend)
+	if err != nil {
+		t.Errorf("expected no error, got %s", err)
+	}
+	if exp := int64(18); exp != n {
 		t.Errorf("expected %d bytes read, got %d", exp, n)
 	}
 	if got := buf.String(); exp != got {

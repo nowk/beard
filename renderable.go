@@ -3,12 +3,13 @@ package beard
 import (
 	"bytes"
 	"io"
+	"log"
 )
 
 type Renderable struct {
 	// File is the template file to be rendered. File must be explicitly closed
 	// by the user
-	File io.Reader
+	File io.ReadSeeker
 
 	// Data is the data set to be used when compiling variables into the html
 	Data map[string]interface{}
@@ -25,6 +26,14 @@ type Renderable struct {
 
 	// eof marks the File has reached EOF.
 	eof bool
+
+	// cursor is the location at which the reader is at
+	cursor int
+
+	// block represents the current block in the file.
+	// blocks are added in a FILO order. The last block in the list would be the
+	// current block
+	blocks []*block
 }
 
 var _ io.Reader = &Renderable{}
@@ -76,16 +85,68 @@ func (r *Renderable) Read(p []byte) (int, error) {
 		r.buf = b
 
 	case exMatch:
-		v := b[:len(b)-len(del)]
+		lenb := len(b)
+
+		r.cursor += lenb
+		r.buf = r.buf[lenb:]
+
+		swapDelim(r) // swap delim early, blocks will return early
+
+		v := b[:lenb-len(del)]
 
 		// when we find a matching rdelim, {{..}} has been closed and we can now
 		// parse for the var value
 		if bytes.Equal(del, rdelim) {
-			dat, ok := r.Data[string(v)]
-			if ok {
-				v = []byte(dat.(string))
-			} else {
+			k := string(bytes.TrimSpace(v))
+
+			// TODO handle if k is empty
+
+			switch k[0] {
+			case '#':
 				v = v[:0]
+
+				bl := r.newBlock(k[1:], r.cursor-(lenb+len(ldelim)))
+				if bl == nil {
+					// TODO handle
+				}
+
+				log.Printf("> [%d] %s", bl.cursor, bl.name)
+				// log.Printf("# of blocks: %d", len(r.blocks))
+
+			case '/':
+				v = v[:0]
+
+				_, bl := r.currentBlock()
+				if bl == nil {
+					// TODO handle
+				}
+				if bl.name != k[1:] {
+					// TODO handle
+				}
+				log.Printf("[%d] %s", bl.cursor, bl.name)
+				// log.Printf("-- %s", string(r.buf))
+				if bl.increment(); bl.isFinished() {
+					r.popBlock()
+
+					return len(p), nil
+				}
+
+				// reset the buffer and move the cursor to the block's cursor
+				// location
+				r.buf = r.buf[:0]
+				r.cursor = bl.cursor
+
+				// set the File's cusror to be read at on the next Read
+				_, err := r.File.Seek(int64(r.cursor), 0)
+				if err != nil {
+					return len(p), err
+				}
+
+				return len(p), nil
+
+			default:
+				v = r.getValue(k)
+				log.Printf("%s: %s", k, string(v))
 			}
 		}
 
@@ -100,21 +161,23 @@ func (r *Renderable) Read(p []byte) (int, error) {
 			r.truncd = r.truncd[:0]
 		}
 
-		// trim buffer of our matched bytes
-		r.buf = r.buf[len(b):]
-		swapDelim(r)
-
 	default:
+		// TODO if we've read all and haven't found the rdelim, error.
+		// also put a threshold. vars paths should not really be overly too long.
+		if bytes.Equal(del, rdelim) {
+			break
+		}
+
 		// if we have a buf, flush it
 		// a buf at this point will always be within the length of p
 		if lenbuf := len(r.buf); lenbuf > 0 {
-			_ = write(r.buf, &p, writ, writ+lenbuf)
-
+			r.cursor = write(r.buf, &p, writ, writ+lenbuf)
 			r.buf = r.buf[:0]
 		}
 	}
 
 	if r.eof && len(r.buf) == 0 {
+		log.Printf("EOF")
 		return len(p), io.EOF
 	}
 
@@ -128,6 +191,89 @@ func (r *Renderable) delim() []byte {
 	}
 
 	return r.del
+}
+
+func (r *Renderable) newBlock(name string, c int) *block {
+	// _, bl := r.currentBlock()
+	bl := r.findBlock(name)
+	if bl != nil {
+		// TODO check that the returned block and the name match
+		return bl
+	}
+
+	d, ok := r.Data[name]
+	if !ok {
+		// TODO handle
+	}
+
+	bl = newBlock(name, c, d)
+	r.blocks = append(r.blocks, bl)
+
+	return bl
+}
+
+// findBlock finds a block by it's name. The name provided should not contain
+// any block prefixes, eg. #words -> words
+//
+// *This is a utility method.*
+func (r *Renderable) findBlock(name string) *block {
+	for _, v := range r.blocks {
+		if v.name == name {
+			return v
+		}
+	}
+
+	return nil
+}
+
+// currentBlock returns the last block (and it's index) on the block list,
+// which represents the current block.
+func (r *Renderable) currentBlock() (int, *block) {
+	z := len(r.blocks) - 1
+	if z < 0 {
+		return -1, nil
+	}
+
+	return z, r.blocks[z]
+}
+
+// popBlock pops off the last block in the blocks list
+func (r *Renderable) popBlock() *block {
+	i, bl := r.currentBlock()
+	if i < 0 {
+		return nil
+	}
+	if bl == nil {
+		return nil
+	}
+
+	r.blocks = r.blocks[:i]
+
+	return bl
+}
+
+// getValue looks up the value within Data map. It will iterrate *up* the blocks
+// before looking at the root Data field itself.
+func (r *Renderable) getValue(k string) []byte {
+	z := len(r.blocks)
+	for ; z > 0; z-- {
+		bl := r.blocks[z-1]
+		if d := bl.getData(k); d != nil {
+			return valueByte(d)
+		}
+	}
+
+	// . never looks up outside of a block
+	if k == "." {
+		return []byte{}
+	}
+
+	d, ok := r.Data[k]
+	if !ok {
+		return []byte{}
+	}
+
+	return valueByte(d)
 }
 
 // flush writes b to out, up to max
@@ -166,4 +312,13 @@ func swapDelim(r *Renderable) {
 	} else {
 		r.del = ldelim
 	}
+}
+
+func valueByte(d interface{}) []byte {
+	switch v := d.(type) {
+	case string:
+		return []byte(v)
+	}
+
+	return []byte{}
 }
