@@ -3,7 +3,6 @@ package beard
 import (
 	"bytes"
 	"io"
-	"log"
 )
 
 type Renderable struct {
@@ -32,19 +31,26 @@ var _ io.Reader = &Renderable{}
 
 func (r *Renderable) Read(p []byte) (int, error) {
 	lenp := len(p)
-	p = p[:0]
+	writ := 0
 
+	// flush trucncated out to write
 	if len(r.truncd) > 0 {
-		n := flush(&r.truncd, &p, lenp)
+		if writ = flush(r.truncd, p, lenp); len(r.truncd) > writ {
+			r.truncd = r.truncd[writ:]
+		} else {
+			r.truncd = r.truncd[:0]
+		}
 
-		// see if there is any buffer left to write to
-		if lenp = lenp - n; lenp == 0 {
-			return n, nil
+		// return if we've written out to the length of p
+		if n := lenp - writ; n == 0 {
+			return writ, nil
 		}
 	}
-	buf := make([]byte, lenp)
 
-	n, err := r.File.Read(buf)
+	// share the given []byte argument so we don't have to allocate a temp
+	// buffer on each Read call.
+
+	n, err := r.File.Read(p[writ:])
 	if err != nil && err != io.EOF {
 		return n, err
 	}
@@ -52,7 +58,16 @@ func (r *Renderable) Read(p []byte) (int, error) {
 		r.eof = (err == io.EOF)
 	}
 
-	r.buf = append(r.buf, buf[:n]...)
+	// combine buffered with what was just read
+	r.buf = append(r.buf, p[writ:writ+n]...)
+
+	// if nothing was written reset p, else trim
+	if writ == 0 {
+		p = p[:0]
+	} else {
+		p = p[:writ+n]
+	}
+
 	del := r.delim()
 
 	b, ma := matchdel(r.buf, del)
@@ -66,8 +81,6 @@ func (r *Renderable) Read(p []byte) (int, error) {
 		// when we find a matching rdelim, {{..}} has been closed and we can now
 		// parse for the var value
 		if bytes.Equal(del, rdelim) {
-			log.Printf("mat:%s", string(v))
-
 			dat, ok := r.Data[string(v)]
 			if ok {
 				v = []byte(dat.(string))
@@ -76,27 +89,29 @@ func (r *Renderable) Read(p []byte) (int, error) {
 			}
 		}
 
-		// combine truncated with current value to be written
-		v = append(r.truncd, v...)
+		// combine truncated with current value and write
+		if val := append(r.truncd, v...); len(val) > lenp {
+			n := write(val, &p, writ, lenp)
 
-		// truncate if v is longer than our given reader bytes
-		if len(v) > lenp {
-			p = append(p, v[:lenp]...)
-			r.truncd = v[lenp:]
+			r.truncd = val[n:]
 		} else {
-			p = append(p, v...)
+			_ = write(val, &p, writ, len(val))
+
 			r.truncd = r.truncd[:0]
 		}
 
-		r.buf = r.buf[len(b):] // trim buffer
-
-		// log.Printf("mat:%s", string(v))
-		log.Printf("buf:%s", string(r.buf))
-
+		// trim buffer of our matched bytes
+		r.buf = r.buf[len(b):]
 		swapDelim(r)
 
 	default:
-		flush(&r.buf, &p, lenp)
+		// if we have a buf, flush it
+		// a buf at this point will always be within the length of p
+		if lenbuf := len(r.buf); lenbuf > 0 {
+			_ = write(r.buf, &p, writ, writ+lenbuf)
+
+			r.buf = r.buf[:0]
+		}
 	}
 
 	if r.eof && len(r.buf) == 0 {
@@ -115,21 +130,33 @@ func (r *Renderable) delim() []byte {
 	return r.del
 }
 
-// flush b to out up to n
-func flush(b, out *[]byte, n int) int {
-	var (
-		_b   = *b
-		_out = *out
-	)
-	if len(_b) > n {
-		*out = append(_out, _b[:n]...)
-		*b = _b[n:]
-	} else {
-		*out = append(_out, _b...)
-		*b = _b[:0]
+// flush writes b to out, up to max
+func flush(b, out []byte, max int) int {
+	if lenb := len(b); lenb < max {
+		max = lenb
 	}
 
-	return len(*out)
+	i := 0
+	for ; i < max; i++ {
+		out[i] = b[i]
+	}
+
+	return i
+}
+
+// write writes b to out, starting at i to n
+func write(b []byte, out *[]byte, i, n int) int {
+	_out := *out
+
+	z := 0
+	for ; i < n; i++ {
+		*out = _out[:i+1]
+		(*out)[i] = b[z]
+
+		z++
+	}
+
+	return z
 }
 
 // swapDelim swaps the delim on a Renderable.

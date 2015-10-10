@@ -27,6 +27,7 @@ func TestRenderableBufTruncdOut(t *testing.T) {
 		{5, 5, "", "", "<h1>H", nil},
 		{6, 0, "ello {", "", "", nil},
 		{3, 3, "c}", "o ", "ell", nil},
+		{0, 0, "c}", "o ", "", nil},
 		{3, 3, "", "orld!", "o w", nil},
 		{3, 3, "", "d!", "orl", nil},
 		{15, 7, "", "", "d!</h1>", nil},
@@ -68,12 +69,12 @@ func TestRenderableBufTruncdOut(t *testing.T) {
 }
 
 func TestRenderableReader(t *testing.T) {
-	file := bytes.NewBufferString(`<h1>Hello {{c}}{{d}}</h1>`)
+	file := bytes.NewBufferString(`<h1>Hello {{word}}{{d}}</h1>`)
 
 	rend := &Renderable{
 		File: file,
 		Data: map[string]interface{}{
-			"c": "World!",
+			"word": "World!",
 		},
 	}
 
