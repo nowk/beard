@@ -79,7 +79,7 @@ func (r *Renderable) Read(p []byte) (int, error) {
 
 	del := r.delim()
 
-	b, ma := matchdel(r.buf, del)
+	b, ma := matchDelim(r.buf, del)
 	switch ma {
 	case paMatch:
 		r.buf = b

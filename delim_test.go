@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func Test_matchdel(t *testing.T) {
+func Test_matchDelim(t *testing.T) {
 	for _, v := range []struct {
 		giv string
 		del string
@@ -37,7 +37,7 @@ func Test_matchdel(t *testing.T) {
 			[]byte(v.exp), v.ma,
 		}
 
-		byt, ma := matchdel([]byte(v.giv), []byte(v.del))
+		byt, ma := matchDelim([]byte(v.giv), []byte(v.del))
 		if exp.ma != ma {
 			t.Errorf("expected a level %d match, got %d: %s %s",
 				exp.ma, ma, v.giv, v.del)

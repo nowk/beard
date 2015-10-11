@@ -19,7 +19,7 @@ const (
 	exMatch
 )
 
-func matchdel(b, del []byte) ([]byte, matchLevel) {
+func matchDelim(b, del []byte) ([]byte, matchLevel) {
 	lenb := len(b)
 	lend := len(del)
 
@@ -29,14 +29,14 @@ func matchdel(b, del []byte) ([]byte, matchLevel) {
 	}
 
 	// find a partial match
-	n := lend - 1
-	for ; n > 0; n-- {
-		i := bytes.Index(b, del[:n])
+	z := lend - 1
+	for ; z > 0; z-- {
+		i := bytes.Index(b, del[:z])
 		if i == -1 {
 			continue
 		}
 		// match must be at the end of the byte array
-		if i+n == lenb {
+		if i+z == lenb {
 			return b, paMatch
 		}
 	}
