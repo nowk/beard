@@ -7,7 +7,6 @@ import (
 )
 
 func TestRenderableBufTruncdOut(t *testing.T) {
-	// file := bytes.NewReader([]byte(`<h1>Hello {{c}}</h1>`))
 	file := bytes.NewReader([]byte(`<h1>Hello {{c}}</h1>`))
 
 	rend := &Renderable{
@@ -69,7 +68,7 @@ func TestRenderableBufTruncdOut(t *testing.T) {
 	}
 }
 
-func TestRenderableReader(t *testing.T) {
+func TestRenderableBasicVariables(t *testing.T) {
 	file := bytes.NewReader([]byte(`<h1>Hello {{word}}{{d}}</h1>`))
 
 	rend := &Renderable{
@@ -95,7 +94,6 @@ func TestRenderableReader(t *testing.T) {
 }
 
 func TestRenderableArrays(t *testing.T) {
-	// file := bytes.NewReader([]byte(`{{#words}}({{.}})({{.}}){{#more_words}}<{{.}}>{{/more_words}}{{/words}}`))
 	file := bytes.NewReader([]byte(`{{#words}}({{.}})({{.}}){{/words}}`))
 
 	rend := &Renderable{

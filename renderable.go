@@ -146,7 +146,6 @@ func (r *Renderable) Read(p []byte) (int, error) {
 
 			default:
 				v = r.getValue(k)
-				log.Printf("%s: %s", k, string(v))
 			}
 		}
 
