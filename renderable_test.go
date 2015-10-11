@@ -69,12 +69,14 @@ func TestRenderableBufTruncdOut(t *testing.T) {
 }
 
 func TestRenderableBasicVariables(t *testing.T) {
-	file := bytes.NewReader([]byte(`<h1>Hello {{word}}{{d}}</h1>`))
+	file := bytes.NewReader([]byte(`<h1>{{a}} {{b}}{{c}}</h1>`))
 
 	rend := &Renderable{
 		File: file,
 		Data: map[string]interface{}{
-			"word": "World!",
+			"a": "Hello",
+			"b": "World",
+			"c": "!",
 		},
 	}
 
