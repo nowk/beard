@@ -7,13 +7,14 @@ import (
 )
 
 func TestRenderableBufTruncdOut(t *testing.T) {
-	file := bytes.NewReader([]byte(`<h1>Hello {{c}}</h1>`))
+	tmpl := `<h1>Hello {{c}}</h1>`
+	data := map[string]interface{}{
+		"c": "world!",
+	}
 
 	rend := &Renderable{
-		File: file,
-		Data: map[string]interface{}{
-			"c": "world!",
-		},
+		File: bytes.NewReader([]byte(tmpl)),
+		Data: data,
 	}
 
 	var cases = []struct {
@@ -69,18 +70,19 @@ func TestRenderableBufTruncdOut(t *testing.T) {
 }
 
 func TestRenderableBasicVariables(t *testing.T) {
-	file := bytes.NewReader([]byte(`<h1>{{a}} {{b}}{{c}}</h1>`))
-
-	rend := &Renderable{
-		File: file,
-		Data: map[string]interface{}{
-			"a": "Hello",
-			"b": "World",
-			"c": "!",
-		},
+	tmpl := `<h1>{{a}} {{b}}{{c}}</h1>`
+	data := map[string]interface{}{
+		"a": "Hello",
+		"b": "World",
+		"c": "!",
 	}
 
 	var exp = `<h1>Hello World!</h1>`
+
+	rend := &Renderable{
+		File: bytes.NewReader([]byte(tmpl)),
+		Data: data,
+	}
 
 	Asser{t}.
 		Given(a(rend)).
@@ -88,27 +90,28 @@ func TestRenderableBasicVariables(t *testing.T) {
 		And(errorIs(nil))
 }
 
-func TestRenderableArrays(t *testing.T) {
-	file := bytes.NewReader([]byte(`{{#words}}({{.}})({{.}}){{/words}}`))
-
-	rend := &Renderable{
-		File: file,
-		Data: map[string]interface{}{
-			"words": []interface{}{
-				"a", "b", "c",
-			},
+func TestRenderableArrayBlock(t *testing.T) {
+	tmpl := `{{#words}}({{.}})({{.}}){{/words}}`
+	data := map[string]interface{}{
+		"words": []interface{}{
+			"a", "b", "c",
 		},
 	}
 
 	var exp = `(a)(a)(b)(b)(c)(c)`
 
+	rend := &Renderable{
+		File: bytes.NewReader([]byte(tmpl)),
+		Data: data,
+	}
+
 	Asser{t}.
 		Given(a(rend)).
 		Then(bodyEquals(exp)).
 		And(errorIs(nil))
 }
 
-func TestRenderableArrayArray(t *testing.T) {
+func TestRenderableSameArrayInArray(t *testing.T) {
 	tmpl := `{{#words}}({{.}}){{#words}}({{.}}){{/words}}{{/words}}`
 	data := map[string]interface{}{
 		"words": []interface{}{
