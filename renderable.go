@@ -149,15 +149,20 @@ func (r *Renderable) Read(p []byte) (int, error) {
 		}
 
 		// combine truncated with current value and write
-		if val := append(r.truncd, v...); len(val) > lenp {
-			n := write(val, &p, writ, lenp)
+		v = append(r.truncd, v...)
+		z := 0
 
-			r.truncd = val[n:]
+		if lenv := len(v); lenv > lenp {
+			z = lenp - writ
+
+			r.truncd = v[z:]
 		} else {
-			_ = write(val, &p, writ, len(val))
+			z = lenv - writ
 
 			r.truncd = r.truncd[:0]
 		}
+
+		p = append(p[:writ], v[:z]...)
 
 	default:
 		// TODO if we've read all and haven't found the rdelim, error.
@@ -167,10 +172,12 @@ func (r *Renderable) Read(p []byte) (int, error) {
 		}
 
 		// if we have a buf, flush it
-		// a buf at this point will always be within the length of p
+		// a buf at this point will always fit into p
 		if lenbuf := len(r.buf); lenbuf > 0 {
-			r.cursor = write(r.buf, &p, writ, writ+lenbuf)
+			p = append(p[:writ], r.buf[:lenbuf]...)
+
 			r.buf = r.buf[:0]
+			r.cursor += len(p) // TODO will need to check this
 		}
 	}
 
@@ -289,21 +296,6 @@ func flush(b, out []byte, max int) int {
 	}
 
 	return i
-}
-
-// write writes b to out, starting at i to n
-func write(b []byte, out *[]byte, i, n int) int {
-	_out := *out
-
-	z := 0
-	for ; i < n; i++ {
-		*out = _out[:i+1]
-		(*out)[i] = b[z]
-
-		z++
-	}
-
-	return z
 }
 
 // swapDelim swaps the delim on a Renderable.
