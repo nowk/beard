@@ -201,16 +201,24 @@ func (r *Renderable) delim() []byte {
 
 func (r *Renderable) newBlock(name string, c int) *block {
 	// _, bl := r.currentBlock()
-	bl := r.findBlock(name, c)
+	bl, neari := r.findBlock(name, c)
 	if bl != nil {
 		// TODO check that the returned block and the name match
 		return bl
 	}
 
-	d, ok := r.Data[name]
-	if !ok {
-		// TODO handle
+	var d interface{}
+	var ok bool
+	if neari != -1 {
+		// log.Printf("neari %d", neari)
+		d = r.blocks[neari].data
+	} else {
+		d, ok = r.Data[name]
+		if !ok {
+			// TODO handle
+		}
 	}
+	// log.Printf("new block %s / %d", name, c)
 
 	bl = newBlock(name, c, d)
 	r.blocks = append(r.blocks, bl)
@@ -225,14 +233,27 @@ func (r *Renderable) newBlock(name string, c int) *block {
 //
 // The name provided should not containa any block prefixes,
 // eg. #words -> words
-func (r *Renderable) findBlock(name string, c int) *block {
+func (r *Renderable) findBlock(name string, c int) (*block, int) {
+	neari := -1
+
+	i := 0
 	for _, v := range r.blocks {
-		if v.name == name && v.cursor == c {
-			return v
+		if v.name != name {
+			i++
+			continue
 		}
+		// mark index of first record with the same name
+		if neari == -1 {
+			neari = i
+		}
+		if v.cursor == c {
+			return v, neari
+		}
+
+		i++
 	}
 
-	return nil
+	return nil, neari
 }
 
 // currentBlock returns the last block (and it's index) on the block list,

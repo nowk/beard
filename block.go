@@ -14,13 +14,20 @@ type block struct {
 }
 
 func newBlock(name string, c int, data interface{}) *block {
+	var bd *blockData
+	var ok bool
+	bd, ok = data.(*blockData)
+	if !ok {
+		bd = &blockData{
+			reflect.ValueOf(data),
+		}
+	}
+
 	bl := &block{
 		name:   name,
 		cursor: c,
 
-		data: &blockData{
-			reflect.ValueOf(data),
-		},
+		data: bd,
 	}
 
 	return bl
