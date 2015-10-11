@@ -80,17 +80,10 @@ func TestRenderableBasicVariables(t *testing.T) {
 
 	var exp = `<h1>Hello World!</h1>`
 
-	buf := bytes.NewBuffer(nil)
-	n, err := io.Copy(buf, rend)
-	if err != nil {
-		t.Errorf("expected no error, got %s", err)
-	}
-	if exp := int64(21); exp != n {
-		t.Errorf("expected %d bytes read, got %d", exp, n)
-	}
-	if got := buf.String(); exp != got {
-		t.Errorf("expected %s, got %s", exp, got)
-	}
+	Asser{t}.
+		Given(a(rend)).
+		Then(bodyEquals(exp)).
+		And(errorIs(nil))
 }
 
 func TestRenderableArrays(t *testing.T) {
@@ -107,15 +100,51 @@ func TestRenderableArrays(t *testing.T) {
 
 	var exp = `(a)(a)(b)(b)(c)(c)`
 
-	buf := bytes.NewBuffer(nil)
-	n, err := io.Copy(buf, rend)
-	if err != nil {
-		t.Errorf("expected no error, got %s", err)
+	Asser{t}.
+		Given(a(rend)).
+		Then(bodyEquals(exp)).
+		And(errorIs(nil))
+}
+
+var a = func(rend *Renderable) StepFunc {
+	return func(t testing.TB, ctx Context) {
+		buf := bytes.NewBuffer(nil)
+		n, err := io.Copy(buf, rend)
+
+		ctx.Set("rend", rend)
+		ctx.Set("buf", buf)
+		ctx.Set("n", n)
+		ctx.Set("err", err)
 	}
-	if exp := int64(18); exp != n {
-		t.Errorf("expected %d bytes read, got %d", exp, n)
+}
+
+var bodyEquals = func(exp string) StepFunc {
+	return func(t testing.TB, ctx Context) {
+		var (
+			buf = ctx.Get("buf").(*bytes.Buffer)
+			n   = ctx.Get("n").(int64)
+		)
+		if exp := int64(len(exp)); exp != n {
+			t.Errorf("expected %d bytes read, got %d", exp, n)
+		}
+		if got := buf.String(); exp != got {
+			t.Errorf("expected %s, got %s", exp, got)
+		}
 	}
-	if got := buf.String(); exp != got {
-		t.Errorf("expected %s, got %s", exp, got)
+}
+
+var errorIs = func(exp error) StepFunc {
+	return func(t testing.TB, ctx Context) {
+		var err = ctx.Get("err")
+		if err != exp {
+			t.Errorf("expected no error, got %s", err)
+		}
+		if exp == nil {
+			return
+		}
+
+		if got := err.(error); exp != got {
+			t.Errorf("expected %s error, got %s", exp, got)
+		}
 	}
 }
