@@ -194,7 +194,7 @@ func (r *Renderable) delim() []byte {
 
 func (r *Renderable) newBlock(name string, c int) *block {
 	// _, bl := r.currentBlock()
-	bl := r.findBlock(name)
+	bl := r.findBlock(name, c)
 	if bl != nil {
 		// TODO check that the returned block and the name match
 		return bl
@@ -211,13 +211,16 @@ func (r *Renderable) newBlock(name string, c int) *block {
 	return bl
 }
 
-// findBlock finds a block by it's name. The name provided should not contain
-// any block prefixes, eg. #words -> words
+// findBlock finds a block by it's name and cursor.
+// The addition of the cursor provides a method of assigning uniqueness to a
+// block, allowing blocks to nest the same block and have a fresh reference to
+// the underlying data.
 //
-// *This is a utility method.*
-func (r *Renderable) findBlock(name string) *block {
+// The name provided should not containa any block prefixes,
+// eg. #words -> words
+func (r *Renderable) findBlock(name string, c int) *block {
 	for _, v := range r.blocks {
-		if v.name == name {
+		if v.name == name && v.cursor == c {
 			return v
 		}
 	}

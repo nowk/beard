@@ -108,6 +108,27 @@ func TestRenderableArrays(t *testing.T) {
 		And(errorIs(nil))
 }
 
+func TestRenderableArrayArray(t *testing.T) {
+	tmpl := `{{#words}}({{.}}){{#words}}({{.}}){{/words}}{{/words}}`
+	data := map[string]interface{}{
+		"words": []interface{}{
+			"a", "b", "c",
+		},
+	}
+
+	var exp = `(a)(a)(b)(c)(b)(a)(b)(c)(c)(a)(b)(c)`
+
+	rend := &Renderable{
+		File: bytes.NewReader([]byte(tmpl)),
+		Data: data,
+	}
+
+	Asser{t}.
+		Given(a(rend)).
+		Then(bodyEquals(exp)).
+		And(errorIs(nil))
+}
+
 var a = func(rend *Renderable) StepFunc {
 	return func(t testing.TB, ctx Context) {
 		buf := bytes.NewBuffer(nil)
