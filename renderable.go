@@ -39,11 +39,12 @@ var _ io.Reader = &Renderable{}
 
 func (r *Renderable) Read(p []byte) (int, error) {
 	lenp := len(p)
+	lent := len(r.truncd)
 	writ := 0
 
 	// flush trucncated out to write
-	if len(r.truncd) > 0 {
-		if writ = flush(r.truncd, p, lenp); len(r.truncd) > writ {
+	if lent > 0 {
+		if writ = flush(r.truncd, p, lenp); lent > writ {
 			r.truncd = r.truncd[writ:]
 		} else {
 			r.truncd = r.truncd[:0]
