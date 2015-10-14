@@ -61,11 +61,13 @@ func (r *Renderable) Read(p []byte) (int, error) {
 	// buffer on each Read call.
 
 	n, err := r.File.Read(p[writ:])
-	if err != nil && err != io.EOF {
-		return n, err
-	}
-	if !r.eof {
-		r.eof = (err == io.EOF)
+	if err != nil {
+		if err != io.EOF {
+			return n, err
+		}
+		if !r.eof {
+			r.eof = (err == io.EOF)
+		}
 	}
 
 	// combine buffered with what was just read
