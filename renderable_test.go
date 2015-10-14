@@ -132,6 +132,165 @@ func TestRenderableSameArrayInArray(t *testing.T) {
 		And(errorIs(nil))
 }
 
+func TestRenderableVarPath(t *testing.T) {
+	tmpl := `<h1>{{a}} {{b.c}}{{d}}</h1>`
+	data := map[string]interface{}{
+		"a": "Hello",
+		"b": map[string]interface{}{
+			"c": "World",
+		},
+		"d": "!",
+	}
+
+	var exp = `<h1>Hello World!</h1>`
+
+	rend := &Renderable{
+		File: bytes.NewReader([]byte(tmpl)),
+		Data: data,
+	}
+
+	Asser{t}.
+		Given(a(rend)).
+		Then(bodyEquals(exp)).
+		And(errorIs(nil))
+}
+
+func TestRenderableArrayOfObjects(t *testing.T) {
+	tmpl := `{{#words}}({{wo.rd}})({{wo.rd}}){{/words}}`
+	data := map[string]interface{}{
+		"words": []map[string]interface{}{
+			map[string]interface{}{
+				"wo": map[string]interface{}{
+					"rd": "a",
+				},
+			},
+			map[string]interface{}{
+				"wo": map[string]interface{}{
+					"rd": "b",
+				},
+			},
+			map[string]interface{}{
+				"wo": map[string]interface{}{
+					"rd": "c",
+				},
+			},
+		},
+	}
+
+	var exp = `(a)(a)(b)(b)(c)(c)`
+
+	rend := &Renderable{
+		File: bytes.NewReader([]byte(tmpl)),
+		Data: data,
+	}
+
+	Asser{t}.
+		Given(a(rend)).
+		Then(bodyEquals(exp)).
+		And(errorIs(nil))
+}
+
+func TestRenderableArrayInPath(t *testing.T) {
+	tmpl := `{{#lots.o.words}}({{.}})({{.}}){{/lots.o.words}}`
+	data := map[string]interface{}{
+		"lots": map[string]interface{}{
+			"o": map[string]interface{}{
+				"words": []interface{}{
+					"a", "b", "c",
+				},
+			},
+		},
+	}
+
+	var exp = `(a)(a)(b)(b)(c)(c)`
+
+	rend := &Renderable{
+		File: bytes.NewReader([]byte(tmpl)),
+		Data: data,
+	}
+
+	Asser{t}.
+		Given(a(rend)).
+		Then(bodyEquals(exp)).
+		And(errorIs(nil))
+}
+
+func TestRenderableObjectBlock(t *testing.T) {
+	tmpl := `<h1>{{#greeting}}{{a}} {{b}}{{c.d}}{{/gretting}}</h1>`
+	data := map[string]interface{}{
+		"greeting": map[string]interface{}{
+			"a": "Hello",
+			"b": "World",
+			"c": map[string]interface{}{
+				"d": "!",
+			},
+		},
+	}
+
+	var exp = `<h1>Hello World!</h1>`
+
+	rend := &Renderable{
+		File: bytes.NewReader([]byte(tmpl)),
+		Data: data,
+	}
+
+	Asser{t}.
+		Given(a(rend)).
+		Then(bodyEquals(exp)).
+		And(errorIs(nil))
+}
+
+func TestRenderableOutsideOfBlockVar(t *testing.T) {
+	tmpl := `<h1>{{#greeting}}{{a}} {{b}}{{c.d}}{{/greeting}}</h1>`
+	data := map[string]interface{}{
+		"a": "Hello",
+		"greeting": map[string]interface{}{
+			"b": "World",
+			"c": map[string]interface{}{
+				"d": "!",
+			},
+		},
+	}
+
+	var exp = `<h1>Hello World!</h1>`
+
+	rend := &Renderable{
+		File: bytes.NewReader([]byte(tmpl)),
+		Data: data,
+	}
+
+	Asser{t}.
+		Given(a(rend)).
+		Then(bodyEquals(exp)).
+		And(errorIs(nil))
+}
+
+func TestRenderableOutsideOfBlockVarUsesClosestVar(t *testing.T) {
+	tmpl := `<h1>{{#greeting}}{{a}} {{b}}{{c.d}}{{/greeting}}</h1>`
+	data := map[string]interface{}{
+		"a": "Hello",
+		"greeting": map[string]interface{}{
+			"a": "Hola",
+			"b": "World",
+			"c": map[string]interface{}{
+				"d": "!",
+			},
+		},
+	}
+
+	var exp = `<h1>Hola World!</h1>`
+
+	rend := &Renderable{
+		File: bytes.NewReader([]byte(tmpl)),
+		Data: data,
+	}
+
+	Asser{t}.
+		Given(a(rend)).
+		Then(bodyEquals(exp)).
+		And(errorIs(nil))
+}
+
 var a = func(rend *Renderable) StepFunc {
 	return func(t testing.TB, ctx Context) {
 		buf := bytes.NewBuffer(nil)

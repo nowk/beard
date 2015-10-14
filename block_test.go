@@ -47,3 +47,38 @@ func Test_blockgetvofDotOnSlice(t *testing.T) {
 		}
 	}
 }
+
+func Test_blockgetvofPathOnSlice(t *testing.T) {
+	bl := newBlock("", 0, []interface{}{
+		map[string]interface{}{
+			"a": map[string]interface{}{
+				"b": "Hello",
+			},
+		},
+		map[string]interface{}{
+			"a": map[string]interface{}{
+				"b": "World",
+			},
+		},
+	})
+
+	{
+		var exp = "Hello"
+
+		d := bl.getvof("a.b")
+		if got := d.(string); exp != got {
+			t.Errorf("expected %s error, got %s", exp, got)
+		}
+	}
+
+	bl.increment()
+
+	{
+		var exp = "World"
+
+		d := bl.getvof("a.b")
+		if got := d.(string); exp != got {
+			t.Errorf("expected %s error, got %s", exp, got)
+		}
+	}
+}

@@ -207,8 +207,8 @@ func (r *Renderable) newBlock(name string, c int) *block {
 		return bl
 	}
 
-	d, ok := r.Data[name]
-	if !ok {
+	d := getvof(name, r.Data)
+	if d == nil {
 		// TODO handle
 	}
 
@@ -267,7 +267,7 @@ func (r *Renderable) getValue(k string) []byte {
 	z := len(r.blocks)
 	for ; z > 0; z-- {
 		bl := r.blocks[z-1]
-		if d := bl.getData(k); d != nil {
+		if d := bl.getvof(k); d != nil {
 			return valueByte(d)
 		}
 	}
@@ -276,13 +276,11 @@ func (r *Renderable) getValue(k string) []byte {
 	if k == "." {
 		return []byte{}
 	}
-
-	d, ok := r.Data[k]
-	if !ok {
-		return []byte{}
+	if v := getvof(k, r.Data); v != nil {
+		return valueByte(v)
 	}
 
-	return valueByte(d)
+	return nil
 }
 
 // flush writes b to out, up to max

@@ -42,14 +42,18 @@ func (b *block) isFinished() bool {
 	return !(b.iterd < b.data.Len())
 }
 
-func (b *block) getData(k string) interface{} {
-	if k == "." {
-		if b.data.isSlice() {
-			return b.data.Index(b.iterd).Interface()
+func (b *block) getvof(k string) interface{} {
+	if b.data.isSlice() {
+		v := b.data.Index(b.iterd).Interface()
+		// . returns the value itself
+		if k == "." {
+			return v
 		}
+
+		return getvof(k, v)
 	}
 
-	return nil
+	return getvof(k, b.data.Value)
 }
 
 type blockData struct {
