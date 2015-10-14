@@ -5,7 +5,7 @@ import (
 )
 
 func Test_blockisFinished(t *testing.T) {
-	bl := newBlock("", 0, []string{
+	bl := newBlock(nil, 0, []string{
 		"a", "b",
 	})
 
@@ -22,7 +22,7 @@ func Test_blockisFinished(t *testing.T) {
 }
 
 func Test_blockgetvofDotOnSlice(t *testing.T) {
-	bl := newBlock("", 0, []interface{}{
+	bl := newBlock(nil, 0, []interface{}{
 		"a",
 		"b",
 	})
@@ -49,7 +49,7 @@ func Test_blockgetvofDotOnSlice(t *testing.T) {
 }
 
 func Test_blockgetvofPathOnSlice(t *testing.T) {
-	bl := newBlock("", 0, []interface{}{
+	bl := newBlock(nil, 0, []interface{}{
 		map[string]interface{}{
 			"a": map[string]interface{}{
 				"b": "Hello",

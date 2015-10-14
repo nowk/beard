@@ -51,7 +51,8 @@ func (r *Renderable) Read(p []byte) (int, error) {
 		}
 
 		// return if we've written out to the length of p
-		if n := lenp - writ; n == 0 {
+		// NOTE this should never write more than lenp
+		if writ >= lenp {
 			return writ, nil
 		}
 	}
@@ -97,7 +98,7 @@ func (r *Renderable) Read(p []byte) (int, error) {
 		// when we find a matching rdelim, {{..}} has been closed and we can now
 		// parse for the var value
 		if bytes.Equal(del, rdelim) {
-			k := string(bytes.TrimSpace(v))
+			k := bytes.TrimSpace(v)
 
 			// TODO handle if k is empty
 
@@ -120,7 +121,7 @@ func (r *Renderable) Read(p []byte) (int, error) {
 				if bl == nil {
 					// TODO handle
 				}
-				if bl.name != k[1:] {
+				if !bytes.Equal(k[1:], bl.name) {
 					// TODO handle
 				}
 				// log.Printf("[%d] %s", bl.cursor, bl.name)
@@ -145,7 +146,7 @@ func (r *Renderable) Read(p []byte) (int, error) {
 				return len(p), nil
 
 			default:
-				v = r.getValue(k)
+				v = r.getValue(string(k))
 			}
 		}
 
@@ -199,7 +200,7 @@ func (r *Renderable) delim() []byte {
 	return r.del
 }
 
-func (r *Renderable) newBlock(name string, c int) *block {
+func (r *Renderable) newBlock(name []byte, c int) *block {
 	// _, bl := r.currentBlock()
 	bl := r.findBlock(name, c)
 	if bl != nil {
@@ -207,9 +208,14 @@ func (r *Renderable) newBlock(name string, c int) *block {
 		return bl
 	}
 
-	d := getvof(name, r.Data)
+	d := getvof(string(name), r.Data)
 	if d == nil {
 		// TODO handle
+	}
+
+	// lazy alloc
+	if r.blocks == nil {
+		r.blocks = make([]*block, 0, 128)
 	}
 
 	bl = newBlock(name, c, d)
@@ -224,11 +230,18 @@ func (r *Renderable) newBlock(name string, c int) *block {
 // the underlying data.
 //
 // The name provided should not containa any block prefixes,
-// eg. #words -> words
-func (r *Renderable) findBlock(name string, c int) *block {
-	for _, v := range r.blocks {
-		if v.name == name && v.cursor == c {
-			return v
+// eg. #words -> words.
+func (r *Renderable) findBlock(name []byte, c int) *block {
+	z := len(r.blocks) - 1
+	if z < 0 {
+		return nil
+	}
+
+	// look up block in reverse
+	for ; z > -1; z-- {
+		bl := r.blocks[z]
+		if bl.cursor == c && bytes.Equal(name, bl.name) {
+			return bl
 		}
 	}
 

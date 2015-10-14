@@ -5,7 +5,7 @@ import (
 )
 
 type block struct {
-	name   string
+	name   []byte
 	cursor int
 
 	data *blockData
@@ -13,7 +13,7 @@ type block struct {
 	iterd int
 }
 
-func newBlock(name string, c int, data interface{}) *block {
+func newBlock(name []byte, c int, data interface{}) *block {
 	bl := &block{
 		name:   name,
 		cursor: c,
