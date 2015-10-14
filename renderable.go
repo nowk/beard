@@ -113,9 +113,6 @@ func (r *Renderable) Read(p []byte) (int, error) {
 					// TODO handle
 				}
 
-				// log.Printf("> [%d] %s", bl.cursor, bl.name)
-				// log.Printf("# of blocks: %d", len(r.blocks))
-
 			case '/':
 				v = v[:0]
 
@@ -126,8 +123,6 @@ func (r *Renderable) Read(p []byte) (int, error) {
 				if !bytes.Equal(k[1:], bl.name) {
 					// TODO handle
 				}
-				// log.Printf("[%d] %s", bl.cursor, bl.name)
-				// log.Printf("-- %s", string(r.buf))
 				if bl.increment(); bl.isFinished() {
 					r.popBlock()
 
@@ -186,7 +181,6 @@ func (r *Renderable) Read(p []byte) (int, error) {
 	}
 
 	if r.eof && len(r.buf) == 0 {
-		// log.Printf("EOF")
 		return len(p), io.EOF
 	}
 
