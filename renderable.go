@@ -169,7 +169,7 @@ func (r *Renderable) swapDelim() {
 }
 
 func (r *Renderable) handleVar(v []byte) ([]byte, error) {
-	tag := bytes.TrimSpace(v)
+	tag := string(bytes.TrimSpace(v))
 	if len(tag) == 0 {
 		// TODO handle if tag is empty
 	}
@@ -189,7 +189,7 @@ func (r *Renderable) handleVar(v []byte) ([]byte, error) {
 		if bl == nil {
 			// TODO handle
 		}
-		if !bytes.Equal(tag, bl.tag) {
+		if bl.tag == tag {
 			// TODO handle
 		}
 		if bl.increment(); bl.isFinished() {
@@ -212,13 +212,13 @@ func (r *Renderable) handleVar(v []byte) ([]byte, error) {
 	return r.getValue(string(tag)), nil
 }
 
-func (r *Renderable) newBlock(tag []byte, c int) *block {
+func (r *Renderable) newBlock(tag string, c int) *block {
 	bl := r.findBlock(tag, c)
 	if bl != nil {
 		return bl
 	}
 
-	d := r.Data.Get(string(tag[1:]))
+	d := r.Data.Get(tag[1:])
 	if d == nil {
 		// TODO handle
 	}
@@ -241,7 +241,7 @@ func (r *Renderable) newBlock(tag []byte, c int) *block {
 //
 // The name provided should not containa any block prefixes,
 // eg. #words -> words.
-func (r *Renderable) findBlock(tag []byte, c int) *block {
+func (r *Renderable) findBlock(tag string, c int) *block {
 	z := len(r.blocks) - 1
 	if z < 0 {
 		return nil
@@ -250,7 +250,7 @@ func (r *Renderable) findBlock(tag []byte, c int) *block {
 	// look up block in reverse
 	for ; z > -1; z-- {
 		bl := r.blocks[z]
-		if bl.cursor == c && bytes.Equal(tag, bl.tag) {
+		if bl.cursor == c && bl.tag == tag {
 			return bl
 		}
 	}
