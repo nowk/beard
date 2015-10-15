@@ -69,9 +69,12 @@ func (r *Renderable) Read(p []byte) (int, error) {
 			r.eof = (err == io.EOF)
 		}
 	}
-
-	// combine buffered with what was just read
-	r.buf = append(r.buf, p[writ:writ+n]...)
+	if r.buf == nil {
+		r.buf = p[:n]
+	} else {
+		// combine buffered with what was just read
+		r.buf = append(r.buf, p[writ:writ+n]...)
+	}
 
 	// if nothing was written reset p, else trim
 	if writ == 0 {
@@ -224,7 +227,7 @@ func (r *Renderable) newBlock(tag []byte, c int) *block {
 
 	// lazy alloc
 	if r.blocks == nil {
-		r.blocks = make([]*block, 0, 32)
+		r.blocks = make([]*block, 0, 32*1024)
 	}
 
 	r.blocks = append(r.blocks, bl)
