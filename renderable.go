@@ -39,22 +39,24 @@ var _ io.Reader = &Renderable{}
 
 func (r *Renderable) Read(p []byte) (int, error) {
 	lenp := len(p)
-	lent := len(r.truncd)
 	writ := 0
 
 	// flush trucncated out to write
-	if lent > 0 {
-		if writ = flush(r.truncd, p, lenp); lent > writ {
-			r.truncd = r.truncd[writ:]
-		} else {
+	if lent := len(r.truncd); lent > 0 {
+		n := r.flush(p)
+		if n >= lent {
 			r.truncd = r.truncd[:0]
+		} else {
+			r.truncd = r.truncd[n:]
 		}
 
-		// return if we've written out to the length of p
-		// NOTE this should never write more than lenp
-		if writ >= lenp {
-			return writ, nil
+		// return if we've written out to the length of p. NOTE this should
+		// never write more than lenp
+		if n >= lenp {
+			return n, nil
 		}
+
+		writ = n
 	}
 
 	// share the given []byte argument so we don't have to allocate a temp
@@ -69,10 +71,11 @@ func (r *Renderable) Read(p []byte) (int, error) {
 			r.eof = (err == io.EOF)
 		}
 	}
+
+	// if we have no buf assign, else append with what was written
 	if r.buf == nil {
 		r.buf = p[:n]
 	} else {
-		// combine buffered with what was just read
 		r.buf = append(r.buf, p[writ:writ+n]...)
 	}
 
@@ -84,9 +87,7 @@ func (r *Renderable) Read(p []byte) (int, error) {
 	}
 
 	del := r.delim()
-
-	b, ma := matchDelim(r.buf, del)
-	switch ma {
+	switch b, ma := matchDelim(r.buf, del); ma {
 	case paMatch:
 		r.buf = b
 
@@ -128,27 +129,22 @@ func (r *Renderable) Read(p []byte) (int, error) {
 		p = append(p[:writ], v[:z]...)
 
 	default:
-		// TODO if we've read all and haven't found the rdelim, error.
-		// also put a threshold. vars paths should not really be overly too long.
-		if bytes.Equal(del, rdelim) {
-			break
-		}
-
-		// if we have a buf, flush it
-		// a buf at this point will always fit into p
-		if lenbuf := len(r.buf); lenbuf > 0 {
-			p = append(p[:writ], r.buf[:lenbuf]...)
+		// if we have a buf, flush it. NOTE: buf at this point will always fit
+		// into p
+		if n := len(r.buf); n > 0 {
+			p = append(p[:writ], r.buf[:n]...)
 
 			r.buf = r.buf[:0]
 			r.cursor += len(p) // TODO will need to check this
 		}
 	}
 
-	if r.eof && len(r.buf) == 0 {
-		return len(p), io.EOF
+	n = len(p)
+	if !r.eof || len(r.buf) > 0 {
+		return n, nil
 	}
 
-	return len(p), nil
+	return n, io.EOF
 }
 
 // delim returns the "current" delim in the Renderable, it defaults to ldelim.
@@ -305,15 +301,17 @@ func (r *Renderable) getValue(k string) []byte {
 	return nil
 }
 
-// flush writes b to out, up to max
-func flush(b, out []byte, max int) int {
-	if lenb := len(b); lenb < max {
-		max = lenb
+// flush writes truncated out to p. It writes up to the lesser of the two
+// lengths, p vs truncd.
+func (r *Renderable) flush(p []byte) int {
+	z := len(p)
+	if n := len(r.truncd); n < z {
+		z = n
 	}
 
 	i := 0
-	for ; i < max; i++ {
-		out[i] = b[i]
+	for ; i < z; i++ {
+		p[i] = r.truncd[i]
 	}
 
 	return i
