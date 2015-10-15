@@ -82,48 +82,53 @@ func (r *Renderable) Read(p []byte) (int, error) {
 	// trim p, so we can start from it's last written point
 	p = p[:writ]
 
-	del := r.delim()
-	switch b, ma := matchDelim(r.buf, del); ma {
+	switch b, ma := matchDelim(r.buf, r.delim()); ma {
 	case paMatch:
 		r.buf = b
 
 	case exMatch:
 		var (
-			lenb = len(b)
+			lenb   = len(b)
+			lentag = lenb - len(r.delim())
 
-			z = lenb - len(del)
-			v = b[:z]
+			del = b[lentag:]
+			tag = b[:lentag]
 		)
 
 		r.buf = r.buf[lenb:]
 		r.cursor += lenb
 		r.swapDelim() // swap delim early, blocks will return early
 
+		var val []byte
+
 		// when we find a matching rdelim, {{..}} has been closed and we can now
 		// parse for the var value
-		if bytes.Equal(b[z:], rdelim) {
-			v, err = r.handleVar(v)
+		if bytes.Equal(del, rdelim) {
+			val, err = r.handleVar(tag)
 			if err != nil {
 				return writ, err
 			}
-			if v == nil {
+			if val == nil {
 				return writ, nil
 			}
+		} else {
+			val = tag
 		}
 
 		// combine truncated with current value and write
-		v = append(r.truncd, v...)
-		z = len(v)
-		if z > lenp {
-			z = lenp - writ
-			r.truncd = v[z:]
+		val = append(r.truncd, val...)
+
+		n := len(val)
+		if n > lenp {
+			n = lenp - writ
+			r.truncd = val[n:]
 		} else {
-			z -= writ
+			n -= writ
 			r.truncd = r.truncd[:0]
 		}
 
-		p = append(p, v[:z]...)
-		writ += z
+		p = append(p, val[:n]...)
+		writ += n
 
 	default:
 		// if we have a buf, flush it. NOTE: buf at this point will always fit
