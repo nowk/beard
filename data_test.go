@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func Test_getvofBasicMap(t *testing.T) {
+func TestDataGetBasicMap(t *testing.T) {
 	data := map[string]interface{}{
 		"a": "Hello",
 		"b": map[string]string{
@@ -18,6 +18,8 @@ func Test_getvofBasicMap(t *testing.T) {
 		},
 	}
 
+	d := Data{value: data}
+
 	for _, v := range []struct {
 		giv, exp string
 	}{
@@ -25,14 +27,14 @@ func Test_getvofBasicMap(t *testing.T) {
 		{"b.c", "World"},
 		{"d.e.f", "!"},
 	} {
-		b := getvof(v.giv, data)
-		if got := b.(string); v.exp != got {
+		b := d.Get(v.giv)
+		if got := string(b.Bytes()); v.exp != got {
 			t.Errorf("expected %q, got %q", v.exp, got)
 		}
 	}
 }
 
-func Test_getvofNotKeyable(t *testing.T) {
+func TestDataGetNotKeyable(t *testing.T) {
 	data := map[string]interface{}{
 		"a": "b",
 		"c": []interface{}{
@@ -40,18 +42,20 @@ func Test_getvofNotKeyable(t *testing.T) {
 		},
 	}
 
+	d := Data{value: data}
+
 	for _, v := range []string{
 		"a.b",
 		"c.d",
 	} {
-		b := getvof(v, data)
+		b := d.Get(v)
 		if b != nil {
 			t.Errorf("expected nil, got %s", b)
 		}
 	}
 }
 
-func Test_getvofStructFields(t *testing.T) {
+func TestDataGetStructFields(t *testing.T) {
 	data := map[string]interface{}{
 		"a": "Hello",
 		"b": struct {
@@ -72,14 +76,16 @@ func Test_getvofStructFields(t *testing.T) {
 		},
 	}
 
+	d := Data{value: data}
+
 	for _, v := range []struct {
 		giv, exp string
 	}{
 		{"a", "Hello"},
 		{"b.C", "World"},
 	} {
-		b := getvof(v.giv, data)
-		if got := b.(string); v.exp != got {
+		b := d.Get(v.giv)
+		if got := string(b.Bytes()); v.exp != got {
 			t.Errorf("expected %s, got %s", v.exp, got)
 		}
 	}
@@ -87,14 +93,14 @@ func Test_getvofStructFields(t *testing.T) {
 	{
 		var exp = "!"
 
-		b := getvof("d.E.f", data)
-		if got := b.(reflect.Value).String(); exp != got {
+		b := d.Get("d.E.f")
+		if got := string(b.Bytes()); exp != got {
 			t.Errorf("expected %s, got %s", exp, got)
 		}
 	}
 }
 
-func Test_getvofUnknownPath(t *testing.T) {
+func TestDataGetUnknownPath(t *testing.T) {
 	var data = map[string]interface{}{
 		"a": "Hello",
 		"b": struct {
@@ -104,14 +110,30 @@ func Test_getvofUnknownPath(t *testing.T) {
 		},
 	}
 
+	d := Data{value: data}
+
 	for _, v := range []string{
 		"a.b",
 		"b.d",
 		"b.c.d",
 	} {
-		b := getvof(v, data)
+		b := d.Get(v)
 		if b != nil {
 			t.Errorf("expected nil, got %s", b)
 		}
+	}
+}
+
+func TestDataGetDotReturnsData(t *testing.T) {
+	var data = map[string]interface{}{
+		"a": "Hello",
+	}
+
+	var exp = &Data{value: data}
+
+	d := Data{value: data}
+
+	if got := d.Get("."); !reflect.DeepEqual(exp, got) {
+		t.Errorf("expected itself, got %s", got)
 	}
 }

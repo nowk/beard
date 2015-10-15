@@ -5,9 +5,9 @@ import (
 )
 
 func Test_blockisFinished(t *testing.T) {
-	bl := newBlock(nil, 0, []string{
+	bl := newBlock(nil, 0, &Data{value: []string{
 		"a", "b",
-	})
+	}})
 
 	if bl.isFinished() {
 		t.Errorf("expected block to not be finished")
@@ -21,17 +21,17 @@ func Test_blockisFinished(t *testing.T) {
 	}
 }
 
-func Test_blockgetvofDotOnSlice(t *testing.T) {
-	bl := newBlock(nil, 0, []interface{}{
+func Test_blockgetValueDotOnSlice(t *testing.T) {
+	bl := newBlock(nil, 0, &Data{value: []interface{}{
 		"a",
 		"b",
-	})
+	}})
 
 	{
 		var exp = "a"
 
-		d := bl.getvof(".")
-		if got := d.(string); exp != got {
+		d := bl.Data().Get(".")
+		if got := string(d.Bytes()); exp != got {
 			t.Errorf("expected %s, got %s", exp, got)
 		}
 	}
@@ -41,15 +41,15 @@ func Test_blockgetvofDotOnSlice(t *testing.T) {
 	{
 		var exp = "b"
 
-		d := bl.getvof(".")
-		if got := d.(string); exp != got {
+		d := bl.Data().Get(".")
+		if got := string(d.Bytes()); exp != got {
 			t.Errorf("expected %s, got %s", exp, got)
 		}
 	}
 }
 
-func Test_blockgetvofPathOnSlice(t *testing.T) {
-	bl := newBlock(nil, 0, []interface{}{
+func Test_blockgetValuePathOnSlice(t *testing.T) {
+	bl := newBlock(nil, 0, &Data{value: []interface{}{
 		map[string]interface{}{
 			"a": map[string]interface{}{
 				"b": "Hello",
@@ -60,13 +60,13 @@ func Test_blockgetvofPathOnSlice(t *testing.T) {
 				"b": "World",
 			},
 		},
-	})
+	}})
 
 	{
 		var exp = "Hello"
 
-		d := bl.getvof("a.b")
-		if got := d.(string); exp != got {
+		d := bl.Data().Get("a.b")
+		if got := string(d.Bytes()); exp != got {
 			t.Errorf("expected %s error, got %s", exp, got)
 		}
 	}
@@ -76,8 +76,8 @@ func Test_blockgetvofPathOnSlice(t *testing.T) {
 	{
 		var exp = "World"
 
-		d := bl.getvof("a.b")
-		if got := d.(string); exp != got {
+		d := bl.Data().Get("a.b")
+		if got := string(d.Bytes()); exp != got {
 			t.Errorf("expected %s error, got %s", exp, got)
 		}
 	}

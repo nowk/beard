@@ -14,7 +14,7 @@ func BenchmarkBasicVar(b *testing.B) {
 
 	rend := &Renderable{
 		File: bytes.NewReader([]byte(tmpl)),
-		Data: data,
+		Data: &Data{value: data},
 	}
 
 	buf := bytes.NewBuffer(nil)
@@ -47,7 +47,7 @@ func BenchmarkArray(b *testing.B) {
 
 	rend := &Renderable{
 		File: bytes.NewReader([]byte(tmpl)),
-		Data: data,
+		Data: &Data{value: data},
 	}
 
 	buf := bytes.NewBuffer(nil)
@@ -80,7 +80,7 @@ func BenchmarkArrayInArray(b *testing.B) {
 
 	rend := &Renderable{
 		File: bytes.NewReader([]byte(tmpl)),
-		Data: data,
+		Data: &Data{value: data},
 	}
 
 	buf := bytes.NewBuffer(nil)
@@ -117,7 +117,7 @@ func BenchmarkBasicBlock(b *testing.B) {
 
 	rend := &Renderable{
 		File: bytes.NewReader([]byte(tmpl)),
-		Data: data,
+		Data: &Data{value: data},
 	}
 
 	buf := bytes.NewBuffer(nil)
@@ -154,7 +154,7 @@ func BenchmarkBlockWithOutsideVar(b *testing.B) {
 
 	rend := &Renderable{
 		File: bytes.NewReader([]byte(tmpl)),
-		Data: data,
+		Data: &Data{value: data},
 	}
 
 	buf := bytes.NewBuffer(nil)
@@ -177,8 +177,8 @@ func BenchmarkBlockWithOutsideVar(b *testing.B) {
 	}
 }
 
-// BenchmarkBasicVar                1000000              2389 ns/op             160 B/op          8 allocs/op
-// BenchmarkArray                    500000              3004 ns/op             149 B/op          9 allocs/op
-// BenchmarkArrayInArray              20000            130202 ns/op             722 B/op         33 allocs/op
-// BenchmarkBasicBlock               200000              9093 ns/op             816 B/op         38 allocs/op
-// BenchmarkBlockWithOutsideVar      200000              9864 ns/op             864 B/op         40 allocs/op
+// BenchmarkBasicVar                 500000              2583 ns/op             192 B/op          9 allocs/op
+// BenchmarkArray                    300000              3499 ns/op             192 B/op         10 allocs/op
+// BenchmarkArrayInArray              20000            118989 ns/op             883 B/op         38 allocs/op
+// BenchmarkBasicBlock               200000              9676 ns/op             848 B/op         39 allocs/op
+// BenchmarkBlockWithOutsideVar      200000              9968 ns/op             896 B/op         41 allocs/op

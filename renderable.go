@@ -11,7 +11,7 @@ type Renderable struct {
 	File io.ReadSeeker
 
 	// Data is the data set to be used when compiling variables into the html
-	Data map[string]interface{}
+	Data *Data
 
 	// del represents the current delimiter
 	del []byte
@@ -101,8 +101,9 @@ func (r *Renderable) Read(p []byte) (int, error) {
 		// parse for the var value
 		if bytes.Equal(del, rdelim) {
 			k := bytes.TrimSpace(v)
-
-			// TODO handle if k is empty
+			if len(k) == 0 {
+				// TODO handle if k is empty
+			}
 
 			switch k[0] {
 			case '#':
@@ -140,7 +141,7 @@ func (r *Renderable) Read(p []byte) (int, error) {
 					return len(p), err
 				}
 
-				return len(p), nil
+				return len(p), err
 
 			default:
 				v = r.getValue(string(k))
@@ -197,24 +198,22 @@ func (r *Renderable) delim() []byte {
 }
 
 func (r *Renderable) newBlock(name []byte, c int) *block {
-	// _, bl := r.currentBlock()
 	bl := r.findBlock(name, c)
 	if bl != nil {
-		// TODO check that the returned block and the name match
 		return bl
 	}
 
-	d := getvof(string(name), r.Data)
+	d := r.Data.Get(string(name))
 	if d == nil {
 		// TODO handle
 	}
+	bl = newBlock(name, c, d)
 
 	// lazy alloc
 	if r.blocks == nil {
-		r.blocks = make([]*block, 0, 128)
+		r.blocks = make([]*block, 0, 32)
 	}
 
-	bl = newBlock(name, c, d)
 	r.blocks = append(r.blocks, bl)
 
 	return bl
@@ -258,10 +257,7 @@ func (r *Renderable) currentBlock() (int, *block) {
 // popBlock pops off the last block in the blocks list
 func (r *Renderable) popBlock() *block {
 	i, bl := r.currentBlock()
-	if i < 0 {
-		return nil
-	}
-	if bl == nil {
+	if i < 0 || bl == nil {
 		return nil
 	}
 
@@ -276,8 +272,9 @@ func (r *Renderable) getValue(k string) []byte {
 	z := len(r.blocks)
 	for ; z > 0; z-- {
 		bl := r.blocks[z-1]
-		if d := bl.getvof(k); d != nil {
-			return valueByte(d)
+
+		if v := bl.Data().Get(k); v != nil {
+			return v.Bytes()
 		}
 	}
 
@@ -285,8 +282,8 @@ func (r *Renderable) getValue(k string) []byte {
 	if k == "." {
 		return []byte{}
 	}
-	if v := getvof(k, r.Data); v != nil {
-		return valueByte(v)
+	if v := r.Data.Get(k); v != nil {
+		return v.Bytes()
 	}
 
 	return nil
@@ -313,13 +310,4 @@ func swapDelim(r *Renderable) {
 	} else {
 		r.del = ldelim
 	}
-}
-
-func valueByte(d interface{}) []byte {
-	switch v := d.(type) {
-	case string:
-		return []byte(v)
-	}
-
-	return []byte{}
 }

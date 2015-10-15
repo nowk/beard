@@ -1,29 +1,28 @@
 package beard
 
-import (
-	"reflect"
-)
-
 type block struct {
 	name   []byte
 	cursor int
-
-	data *blockData
+	data   *Data
 
 	iterd int
 }
 
-func newBlock(name []byte, c int, data interface{}) *block {
-	bl := &block{
+func newBlock(name []byte, c int, data *Data) *block {
+	return &block{
 		name:   name,
 		cursor: c,
+		data:   data,
+	}
+}
 
-		data: &blockData{
-			reflect.ValueOf(data),
-		},
+func (b *block) Data() *Data {
+	if b.data.IsSlice() {
+		// get data for current iteration context
+		return b.data.Index(b.iterd)
 	}
 
-	return bl
+	return b.data
 }
 
 // increment increments and returns the current iterd
@@ -40,34 +39,4 @@ func (b *block) increment() int {
 // been read through.
 func (b *block) isFinished() bool {
 	return !(b.iterd < b.data.Len())
-}
-
-func (b *block) getvof(k string) interface{} {
-	if b.data.isSlice() {
-		v := b.data.Index(b.iterd).Interface()
-		// . returns the value itself
-		if k == "." {
-			return v
-		}
-
-		return getvof(k, v)
-	}
-
-	return getvof(k, b.data.Value)
-}
-
-type blockData struct {
-	reflect.Value
-}
-
-func (d *blockData) Len() int {
-	if d.isSlice() {
-		return d.Value.Len()
-	}
-
-	return 0
-}
-
-func (d *blockData) isSlice() bool {
-	return d.Kind() == reflect.Slice
 }

@@ -14,7 +14,7 @@ func TestRenderableBufTruncdOut(t *testing.T) {
 
 	rend := &Renderable{
 		File: bytes.NewReader([]byte(tmpl)),
-		Data: data,
+		Data: &Data{value: data},
 	}
 
 	var cases = []struct {
@@ -81,7 +81,7 @@ func TestRenderableBasicVariables(t *testing.T) {
 
 	rend := &Renderable{
 		File: bytes.NewReader([]byte(tmpl)),
-		Data: data,
+		Data: &Data{value: data},
 	}
 
 	Asser{t}.
@@ -102,7 +102,7 @@ func TestRenderableArrayBlock(t *testing.T) {
 
 	rend := &Renderable{
 		File: bytes.NewReader([]byte(tmpl)),
-		Data: data,
+		Data: &Data{value: data},
 	}
 
 	Asser{t}.
@@ -123,7 +123,7 @@ func TestRenderableSameArrayInArray(t *testing.T) {
 
 	rend := &Renderable{
 		File: bytes.NewReader([]byte(tmpl)),
-		Data: data,
+		Data: &Data{value: data},
 	}
 
 	Asser{t}.
@@ -146,7 +146,7 @@ func TestRenderableVarPath(t *testing.T) {
 
 	rend := &Renderable{
 		File: bytes.NewReader([]byte(tmpl)),
-		Data: data,
+		Data: &Data{value: data},
 	}
 
 	Asser{t}.
@@ -181,7 +181,7 @@ func TestRenderableArrayOfObjects(t *testing.T) {
 
 	rend := &Renderable{
 		File: bytes.NewReader([]byte(tmpl)),
-		Data: data,
+		Data: &Data{value: data},
 	}
 
 	Asser{t}.
@@ -206,7 +206,7 @@ func TestRenderableArrayInPath(t *testing.T) {
 
 	rend := &Renderable{
 		File: bytes.NewReader([]byte(tmpl)),
-		Data: data,
+		Data: &Data{value: data},
 	}
 
 	Asser{t}.
@@ -231,7 +231,7 @@ func TestRenderableObjectBlock(t *testing.T) {
 
 	rend := &Renderable{
 		File: bytes.NewReader([]byte(tmpl)),
-		Data: data,
+		Data: &Data{value: data},
 	}
 
 	Asser{t}.
@@ -256,7 +256,7 @@ func TestRenderableOutsideOfBlockVar(t *testing.T) {
 
 	rend := &Renderable{
 		File: bytes.NewReader([]byte(tmpl)),
-		Data: data,
+		Data: &Data{value: data},
 	}
 
 	Asser{t}.
@@ -282,13 +282,17 @@ func TestRenderableOutsideOfBlockVarUsesClosestVar(t *testing.T) {
 
 	rend := &Renderable{
 		File: bytes.NewReader([]byte(tmpl)),
-		Data: data,
+		Data: &Data{value: data},
 	}
 
 	Asser{t}.
 		Given(a(rend)).
 		Then(bodyEquals(exp)).
 		And(errorIs(nil))
+}
+
+func TestRenderableErrorsUnclosedBlock(t *testing.T) {
+	t.Skip()
 }
 
 var a = func(rend *Renderable) StepFunc {
