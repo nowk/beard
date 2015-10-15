@@ -141,7 +141,7 @@ func (r *Renderable) Read(p []byte) (int, error) {
 					return len(p), err
 				}
 
-				return len(p), err
+				return len(p), nil
 
 			default:
 				v = r.getValue(string(k))
