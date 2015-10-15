@@ -1,16 +1,16 @@
 package beard
 
 type block struct {
-	name   []byte
+	tag    []byte
 	cursor int
 	data   *Data
 
 	iterd int
 }
 
-func newBlock(name []byte, c int, data *Data) *block {
+func newBlock(tag []byte, c int, data *Data) *block {
 	return &block{
-		name:   name,
+		tag:    tag,
 		cursor: c,
 		data:   data,
 	}

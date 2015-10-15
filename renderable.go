@@ -88,77 +88,37 @@ func (r *Renderable) Read(p []byte) (int, error) {
 		r.buf = b
 
 	case exMatch:
-		lenb := len(b)
+		var (
+			lenb = len(b)
 
-		r.cursor += lenb
+			z = lenb - len(del)
+			v = b[:z]
+		)
+
 		r.buf = r.buf[lenb:]
-
-		swapDelim(r) // swap delim early, blocks will return early
-
-		v := b[:lenb-len(del)]
+		r.cursor += lenb
+		r.swapDelim() // swap delim early, blocks will return early
 
 		// when we find a matching rdelim, {{..}} has been closed and we can now
 		// parse for the var value
-		if bytes.Equal(del, rdelim) {
-			k := bytes.TrimSpace(v)
-			if len(k) == 0 {
-				// TODO handle if k is empty
+		if bytes.Equal(b[z:], rdelim) {
+			v, err = r.handleVar(v)
+			if err != nil {
+				return len(p), err
 			}
-
-			switch k[0] {
-			case '#':
-				v = v[:0]
-
-				bl := r.newBlock(k[1:], r.cursor-(lenb+len(ldelim)))
-				if bl == nil {
-					// TODO handle
-				}
-
-			case '/':
-				v = v[:0]
-
-				_, bl := r.currentBlock()
-				if bl == nil {
-					// TODO handle
-				}
-				if !bytes.Equal(k[1:], bl.name) {
-					// TODO handle
-				}
-				if bl.increment(); bl.isFinished() {
-					r.popBlock()
-
-					return len(p), nil
-				}
-
-				// reset the buffer and move the cursor to the block's cursor
-				// location
-				r.buf = r.buf[:0]
-				r.cursor = bl.cursor
-
-				// set the File's cusror to be read at on the next Read
-				_, err := r.File.Seek(int64(r.cursor), 0)
-				if err != nil {
-					return len(p), err
-				}
-
+			if v == nil {
 				return len(p), nil
-
-			default:
-				v = r.getValue(string(k))
 			}
 		}
 
 		// combine truncated with current value and write
 		v = append(r.truncd, v...)
-		z := 0
-
-		if lenv := len(v); lenv > lenp {
+		z = len(v)
+		if z > lenp {
 			z = lenp - writ
-
 			r.truncd = v[z:]
 		} else {
-			z = lenv - writ
-
+			z -= writ
 			r.truncd = r.truncd[:0]
 		}
 
@@ -197,17 +157,70 @@ func (r *Renderable) delim() []byte {
 	return r.del
 }
 
-func (r *Renderable) newBlock(name []byte, c int) *block {
-	bl := r.findBlock(name, c)
+// swapDelim swaps the delim on a Renderable.
+func (r *Renderable) swapDelim() {
+	if bytes.Equal(r.delim(), ldelim) {
+		r.del = rdelim
+	} else {
+		r.del = ldelim
+	}
+}
+
+func (r *Renderable) handleVar(v []byte) ([]byte, error) {
+	tag := bytes.TrimSpace(v)
+	if len(tag) == 0 {
+		// TODO handle if tag is empty
+	}
+
+	switch tag[0] {
+	case '#':
+		// bl := r.newBlock(tag, r.cursor)
+		bl := r.newBlock(tag, r.cursor-(len(v)+len(rdelim)+len(ldelim)))
+		if bl == nil {
+			// TODO handle
+		}
+
+		return v[:0], nil
+
+	case '/':
+		_, bl := r.currentBlock()
+		if bl == nil {
+			// TODO handle
+		}
+		if !bytes.Equal(tag, bl.tag) {
+			// TODO handle
+		}
+		if bl.increment(); bl.isFinished() {
+			r.popBlock()
+
+			return nil, nil
+		}
+
+		// reset the buffer and move the cursor to the block's cursor
+		// location
+		r.buf = r.buf[:0]
+		r.cursor = bl.cursor
+
+		// set the File's cusror to be read at on the next Read
+		_, err := r.File.Seek(int64(r.cursor), 0)
+
+		return nil, err
+	}
+
+	return r.getValue(string(tag)), nil
+}
+
+func (r *Renderable) newBlock(tag []byte, c int) *block {
+	bl := r.findBlock(tag, c)
 	if bl != nil {
 		return bl
 	}
 
-	d := r.Data.Get(string(name))
+	d := r.Data.Get(string(tag[1:]))
 	if d == nil {
 		// TODO handle
 	}
-	bl = newBlock(name, c, d)
+	bl = newBlock(tag, c, d)
 
 	// lazy alloc
 	if r.blocks == nil {
@@ -226,7 +239,7 @@ func (r *Renderable) newBlock(name []byte, c int) *block {
 //
 // The name provided should not containa any block prefixes,
 // eg. #words -> words.
-func (r *Renderable) findBlock(name []byte, c int) *block {
+func (r *Renderable) findBlock(tag []byte, c int) *block {
 	z := len(r.blocks) - 1
 	if z < 0 {
 		return nil
@@ -235,7 +248,7 @@ func (r *Renderable) findBlock(name []byte, c int) *block {
 	// look up block in reverse
 	for ; z > -1; z-- {
 		bl := r.blocks[z]
-		if bl.cursor == c && bytes.Equal(name, bl.name) {
+		if bl.cursor == c && bytes.Equal(tag, bl.tag) {
 			return bl
 		}
 	}
@@ -301,13 +314,4 @@ func flush(b, out []byte, max int) int {
 	}
 
 	return i
-}
-
-// swapDelim swaps the delim on a Renderable.
-func swapDelim(r *Renderable) {
-	if bytes.Equal(r.delim(), ldelim) {
-		r.del = rdelim
-	} else {
-		r.del = ldelim
-	}
 }
