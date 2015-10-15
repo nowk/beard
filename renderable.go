@@ -79,12 +79,8 @@ func (r *Renderable) Read(p []byte) (int, error) {
 		r.buf = append(r.buf, p[writ:writ+n]...)
 	}
 
-	// if nothing was written reset p, else trim
-	if writ == 0 {
-		p = p[:0]
-	} else {
-		p = p[:writ+n]
-	}
+	// trim p, so we can start from it's last written point
+	p = p[:writ]
 
 	del := r.delim()
 	switch b, ma := matchDelim(r.buf, del); ma {
@@ -108,10 +104,10 @@ func (r *Renderable) Read(p []byte) (int, error) {
 		if bytes.Equal(b[z:], rdelim) {
 			v, err = r.handleVar(v)
 			if err != nil {
-				return len(p), err
+				return writ, err
 			}
 			if v == nil {
-				return len(p), nil
+				return writ, nil
 			}
 		}
 
@@ -126,20 +122,22 @@ func (r *Renderable) Read(p []byte) (int, error) {
 			r.truncd = r.truncd[:0]
 		}
 
-		p = append(p[:writ], v[:z]...)
+		p = append(p, v[:z]...)
+		writ += z
 
 	default:
 		// if we have a buf, flush it. NOTE: buf at this point will always fit
 		// into p
 		if n := len(r.buf); n > 0 {
-			p = append(p[:writ], r.buf[:n]...)
+			p = append(p, r.buf[:n]...)
+			writ += n
 
 			r.buf = r.buf[:0]
-			r.cursor += len(p) // TODO will need to check this
+			r.cursor += writ
 		}
 	}
 
-	n = len(p)
+	n = writ
 	if !r.eof || len(r.buf) > 0 {
 		return n, nil
 	}
