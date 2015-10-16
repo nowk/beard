@@ -26,6 +26,7 @@ func BenchmarkBasicVar(b *testing.B) {
 		b.StopTimer()
 
 		rend.File.Seek(0, 0)
+		rend.blocks = rend.blocks[:0]
 		buf.Reset()
 
 		b.StartTimer()
@@ -59,6 +60,7 @@ func BenchmarkArray(b *testing.B) {
 		b.StopTimer()
 
 		rend.File.Seek(0, 0)
+		rend.blocks = rend.blocks[:0]
 		buf.Reset()
 
 		b.StartTimer()
@@ -92,6 +94,7 @@ func BenchmarkArrayInArray(b *testing.B) {
 		b.StopTimer()
 
 		rend.File.Seek(0, 0)
+		rend.blocks = rend.blocks[:0]
 		buf.Reset()
 
 		b.StartTimer()
@@ -129,6 +132,7 @@ func BenchmarkBasicBlock(b *testing.B) {
 		b.StopTimer()
 
 		rend.File.Seek(0, 0)
+		rend.blocks = rend.blocks[:0]
 		buf.Reset()
 
 		b.StartTimer()
@@ -166,6 +170,7 @@ func BenchmarkBlockWithOutsideVar(b *testing.B) {
 		b.StopTimer()
 
 		rend.File.Seek(0, 0)
+		rend.blocks = rend.blocks[:0]
 		buf.Reset()
 
 		b.StartTimer()
@@ -177,8 +182,8 @@ func BenchmarkBlockWithOutsideVar(b *testing.B) {
 	}
 }
 
-// BenchmarkBasicVar                 500000              2579 ns/op             192 B/op          9 allocs/op
-// BenchmarkArray                    500000              2904 ns/op             192 B/op         10 allocs/op
-// BenchmarkArrayInArray              20000            121594 ns/op             821 B/op         38 allocs/op
-// BenchmarkBasicBlock               200000              7503 ns/op             849 B/op         38 allocs/op
-// BenchmarkBlockWithOutsideVar      200000              7187 ns/op             897 B/op         40 allocs/op
+// BenchmarkBasicVar                 500000              2620 ns/op             192 B/op          9 allocs/op
+// BenchmarkArray                    300000              4412 ns/op             360 B/op         17 allocs/op
+// BenchmarkArrayInArray             200000             10324 ns/op            1016 B/op         47 allocs/op
+// BenchmarkBasicBlock               200000              8584 ns/op             864 B/op         39 allocs/op
+// BenchmarkBlockWithOutsideVar      200000              8472 ns/op             912 B/op         41 allocs/op
