@@ -176,8 +176,8 @@ func (r *Renderable) handleVar(v []byte) ([]byte, error) {
 
 	switch tag[0] {
 	case '#':
-		// bl := r.newBlock(tag, r.cursor)
-		bl := r.newBlock(tag, r.cursor-(len(v)+len(rdelim)+len(ldelim)))
+		bl := r.newBlock(tag, r.cursor)
+		// bl := r.newBlock(tag, r.cursor-(len(v)+len(rdelim)+len(ldelim)))
 		if bl == nil {
 			// TODO handle
 		}
