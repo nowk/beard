@@ -18,7 +18,7 @@ func TestDataGetBasicMap(t *testing.T) {
 		},
 	}
 
-	d := Data{value: data}
+	d := Data{Value: data}
 
 	for _, v := range []struct {
 		giv, exp string
@@ -42,7 +42,7 @@ func TestDataGetNotKeyable(t *testing.T) {
 		},
 	}
 
-	d := Data{value: data}
+	d := Data{Value: data}
 
 	for _, v := range []string{
 		"a.b",
@@ -76,7 +76,7 @@ func TestDataGetStructFields(t *testing.T) {
 		},
 	}
 
-	d := Data{value: data}
+	d := Data{Value: data}
 
 	for _, v := range []struct {
 		giv, exp string
@@ -110,7 +110,7 @@ func TestDataGetUnknownPath(t *testing.T) {
 		},
 	}
 
-	d := Data{value: data}
+	d := Data{Value: data}
 
 	for _, v := range []string{
 		"a.b",
@@ -129,9 +129,9 @@ func TestDataGetDotReturnsData(t *testing.T) {
 		"a": "Hello",
 	}
 
-	var exp = &Data{value: data}
+	var exp = &Data{Value: data}
 
-	d := Data{value: data}
+	d := Data{Value: data}
 
 	if got := d.Get("."); !reflect.DeepEqual(exp, got) {
 		t.Errorf("expected itself, got %s", got)

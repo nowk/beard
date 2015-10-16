@@ -5,7 +5,7 @@ import (
 )
 
 func Test_blockisFinished(t *testing.T) {
-	bl := newBlock("", 0, &Data{value: []string{
+	bl := newBlock("", 0, &Data{Value: []string{
 		"a", "b",
 	}})
 
@@ -22,7 +22,7 @@ func Test_blockisFinished(t *testing.T) {
 }
 
 func Test_blockgetValueDotOnSlice(t *testing.T) {
-	bl := newBlock("", 0, &Data{value: []interface{}{
+	bl := newBlock("", 0, &Data{Value: []interface{}{
 		"a",
 		"b",
 	}})
@@ -49,7 +49,7 @@ func Test_blockgetValueDotOnSlice(t *testing.T) {
 }
 
 func Test_blockgetValuePathOnSlice(t *testing.T) {
-	bl := newBlock("", 0, &Data{value: []interface{}{
+	bl := newBlock("", 0, &Data{Value: []interface{}{
 		map[string]interface{}{
 			"a": map[string]interface{}{
 				"b": "Hello",

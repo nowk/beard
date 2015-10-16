@@ -14,7 +14,7 @@ func BenchmarkBasicVar(b *testing.B) {
 
 	rend := &Renderable{
 		File: bytes.NewReader([]byte(tmpl)),
-		Data: &Data{value: data},
+		Data: &Data{Value: data},
 	}
 
 	buf := bytes.NewBuffer(nil)
@@ -48,7 +48,7 @@ func BenchmarkArray(b *testing.B) {
 
 	rend := &Renderable{
 		File: bytes.NewReader([]byte(tmpl)),
-		Data: &Data{value: data},
+		Data: &Data{Value: data},
 	}
 
 	buf := bytes.NewBuffer(nil)
@@ -82,7 +82,7 @@ func BenchmarkArrayInArray(b *testing.B) {
 
 	rend := &Renderable{
 		File: bytes.NewReader([]byte(tmpl)),
-		Data: &Data{value: data},
+		Data: &Data{Value: data},
 	}
 
 	buf := bytes.NewBuffer(nil)
@@ -120,7 +120,7 @@ func BenchmarkBasicBlock(b *testing.B) {
 
 	rend := &Renderable{
 		File: bytes.NewReader([]byte(tmpl)),
-		Data: &Data{value: data},
+		Data: &Data{Value: data},
 	}
 
 	buf := bytes.NewBuffer(nil)
@@ -158,7 +158,7 @@ func BenchmarkBlockWithOutsideVar(b *testing.B) {
 
 	rend := &Renderable{
 		File: bytes.NewReader([]byte(tmpl)),
-		Data: &Data{value: data},
+		Data: &Data{Value: data},
 	}
 
 	buf := bytes.NewBuffer(nil)

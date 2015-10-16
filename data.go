@@ -6,7 +6,7 @@ import (
 )
 
 type Data struct {
-	value interface{}
+	Value interface{}
 
 	// valueOf is a cache of value's reflect.Value
 	valueOf *reflect.Value
@@ -17,9 +17,9 @@ func (d *Data) Get(k string) *Data {
 		// dot notations just returns itself
 		return d
 	}
-	if v := getValue(k, d.value); v != nil {
+	if v := getValue(k, d.Value); v != nil {
 		return &Data{
-			value: v,
+			Value: v,
 		}
 	}
 
@@ -40,7 +40,7 @@ func (d *Data) IsSlice() bool {
 
 func (d *Data) ValueOf() *reflect.Value {
 	if d.valueOf == nil {
-		v := reflect.ValueOf(d.value)
+		v := reflect.ValueOf(d.Value)
 
 		d.valueOf = &v
 	}
@@ -50,13 +50,13 @@ func (d *Data) ValueOf() *reflect.Value {
 
 func (d *Data) Index(n int) *Data {
 	return &Data{
-		value: d.ValueOf().Index(n).Interface(),
+		Value: d.ValueOf().Index(n).Interface(),
 	}
 }
 
 func (d *Data) Bytes() []byte {
 	// if we can type assert value, do it!
-	switch t := d.value.(type) {
+	switch t := d.Value.(type) {
 	case string:
 		return []byte(t)
 	case reflect.Value:
