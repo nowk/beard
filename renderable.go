@@ -29,7 +29,6 @@ type Renderable struct {
 	// cursor is the location at which the reader is at
 	cursor int
 
-	// block represents the current block in the file.
 	// blocks are added in a FILO order. The last block in the list would be the
 	// current block
 	blocks []*block
