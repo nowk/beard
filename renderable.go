@@ -143,11 +143,11 @@ func (r *Renderable) Read(p []byte) (int, error) {
 	}
 
 	n = writ
-	if !r.eof || len(r.buf) > 0 {
-		return n, nil
+	if r.eof && len(r.buf) == 0 {
+		return n, io.EOF
 	}
 
-	return n, io.EOF
+	return n, nil
 }
 
 // delim returns the "current" delim in the Renderable, it defaults to ldelim.
