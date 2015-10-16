@@ -272,7 +272,10 @@ func (r *Renderable) currentBlock() (int, *block) {
 // popBlock pops off the last block in the blocks list
 func (r *Renderable) popBlock() *block {
 	i, bl := r.currentBlock()
-	if i < 0 || bl == nil {
+	if i < 0 {
+		return nil
+	}
+	if bl == nil {
 		return nil
 	}
 
