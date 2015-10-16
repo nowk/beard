@@ -42,13 +42,8 @@ func (r *Renderable) Read(p []byte) (int, error) {
 
 	// flush trucncated out to write
 	if lent := len(r.truncd); lent > 0 {
-		n := r.flush(p)
-		if n >= lent {
-			r.truncd = r.truncd[:0]
-		} else {
-			r.truncd = r.truncd[n:]
-		}
-
+		n, tr := r.flush(p)
+		r.truncd = tr
 		// return if we've written out to the length of p. NOTE this should
 		// never write more than lenp
 		if n >= lenp {
@@ -307,17 +302,22 @@ func (r *Renderable) getValue(k string) []byte {
 }
 
 // flush writes truncated out to p. It writes up to the lesser of the two
-// lengths, p vs truncd.
-func (r *Renderable) flush(p []byte) int {
+// lengths, p vs truncd. It returns any remaing bytes that couldn't be written
+// due to length constraints.
+func (r *Renderable) flush(p []byte) (int, []byte) {
+	lent := len(r.truncd)
 	z := len(p)
-	if n := len(r.truncd); n < z {
-		z = n
+	if lent < z {
+		z = lent
 	}
 
 	i := 0
 	for ; i < z; i++ {
 		p[i] = r.truncd[i]
 	}
+	if i >= lent {
+		return i, r.truncd[:0]
+	}
 
-	return i
+	return i, r.truncd[i:]
 }
