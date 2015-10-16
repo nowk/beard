@@ -226,7 +226,7 @@ func (r *Renderable) newBlock(tag string, c int) *block {
 
 	// lazy alloc
 	if r.blocks == nil {
-		r.blocks = make([]*block, 0, 32*1024)
+		r.blocks = make([]*block, 0, 32)
 	}
 
 	r.blocks = append(r.blocks, bl)

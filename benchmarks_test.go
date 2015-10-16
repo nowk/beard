@@ -182,8 +182,8 @@ func BenchmarkBlockWithOutsideVar(b *testing.B) {
 	}
 }
 
-// BenchmarkBasicVar                 500000              2620 ns/op             192 B/op          9 allocs/op
-// BenchmarkArray                    300000              4412 ns/op             360 B/op         17 allocs/op
-// BenchmarkArrayInArray             200000             10324 ns/op            1016 B/op         47 allocs/op
-// BenchmarkBasicBlock               200000              8584 ns/op             864 B/op         39 allocs/op
-// BenchmarkBlockWithOutsideVar      200000              8472 ns/op             912 B/op         41 allocs/op
+// BenchmarkBasicVar                 500000              2638 ns/op             192 B/op          9 allocs/op
+// BenchmarkArray                    300000              4080 ns/op             360 B/op         17 allocs/op
+// BenchmarkArrayInArray             200000              9825 ns/op            1016 B/op         47 allocs/op
+// BenchmarkBasicBlock               200000              8386 ns/op             864 B/op         39 allocs/op
+// BenchmarkBlockWithOutsideVar      200000              8982 ns/op             912 B/op         41 allocs/op
