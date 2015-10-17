@@ -9,6 +9,10 @@ import (
 type File interface {
 	Read([]byte) (int, error)
 	Seek(int64, int) (int64, error)
+
+	// Close is only called on partials. Main template files must be explicitly
+	// closed by the user
+	Close() error
 }
 
 type PartialFunc func(string) (File, error)
@@ -58,7 +62,6 @@ func (t *Template) Read(p []byte) (int, error) {
 	writ := 0
 
 	if t.partial != nil {
-		// TODO partials need to find a way to close itself
 		n, err := t.partial.Read(p)
 		if err == nil {
 			return n, nil
@@ -67,6 +70,8 @@ func (t *Template) Read(p []byte) (int, error) {
 			return n, err
 		}
 
+		// we are in charge of explicitly closing partial files
+		t.partial.File.Close()
 		t.partial = nil
 
 		writ = n

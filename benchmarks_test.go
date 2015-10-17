@@ -13,7 +13,7 @@ func BenchmarkBasicVar(b *testing.B) {
 	}
 
 	tmpl := &Template{
-		File: bytes.NewReader([]byte(html)),
+		File: mFile{bytes.NewReader([]byte(html))},
 		Data: &Data{Value: data},
 	}
 
@@ -47,7 +47,7 @@ func BenchmarkArray(b *testing.B) {
 	}
 
 	tmpl := &Template{
-		File: bytes.NewReader([]byte(html)),
+		File: mFile{bytes.NewReader([]byte(html))},
 		Data: &Data{Value: data},
 	}
 
@@ -81,7 +81,7 @@ func BenchmarkArrayInArray(b *testing.B) {
 	}
 
 	tmpl := &Template{
-		File: bytes.NewReader([]byte(html)),
+		File: mFile{bytes.NewReader([]byte(html))},
 		Data: &Data{Value: data},
 	}
 
@@ -119,7 +119,7 @@ func BenchmarkBasicBlock(b *testing.B) {
 	}
 
 	tmpl := &Template{
-		File: bytes.NewReader([]byte(html)),
+		File: mFile{bytes.NewReader([]byte(html))},
 		Data: &Data{Value: data},
 	}
 
@@ -157,7 +157,7 @@ func BenchmarkBlockWithOutsideVar(b *testing.B) {
 	}
 
 	tmpl := &Template{
-		File: bytes.NewReader([]byte(html)),
+		File: mFile{bytes.NewReader([]byte(html))},
 		Data: &Data{Value: data},
 	}
 
@@ -189,7 +189,7 @@ func BenchmarkEscape(b *testing.B) {
 	}
 
 	tmpl := &Template{
-		File: bytes.NewReader([]byte(html)),
+		File: mFile{bytes.NewReader([]byte(html))},
 		Data: &Data{Value: data},
 	}
 
@@ -223,7 +223,7 @@ func BenchmarkPartialInPartial(b *testing.B) {
 	}
 
 	tmpl := &Template{
-		File: bytes.NewReader([]byte(html)),
+		File: mFile{bytes.NewReader([]byte(html))},
 		Data: &Data{Value: data},
 	}
 	tmpl.Partial(func(path string) (File, error) {
@@ -237,7 +237,7 @@ func BenchmarkPartialInPartial(b *testing.B) {
 			p = []byte(`{{e}}`)
 		}
 
-		return bytes.NewReader(p), nil
+		return mFile{bytes.NewReader(p)}, nil
 	})
 
 	buf := bytes.NewBuffer(nil)
@@ -261,10 +261,10 @@ func BenchmarkPartialInPartial(b *testing.B) {
 	}
 }
 
-// BenchmarkBasicVar                 500000              2978 ns/op             192 B/op          9 allocs/op
-// BenchmarkArray                    300000              4084 ns/op             344 B/op         17 allocs/op
-// BenchmarkArrayInArray             100000             11193 ns/op            1016 B/op         47 allocs/op
-// BenchmarkBasicBlock               200000              9768 ns/op             864 B/op         40 allocs/op
-// BenchmarkBlockWithOutsideVar      200000             10172 ns/op             912 B/op         42 allocs/op
-// BenchmarkEscape                   200000              9208 ns/op             864 B/op         29 allocs/op
-// BenchmarkPartialInPartial         100000             11259 ns/op            1128 B/op         41 allocs/op
+// BenchmarkBasicVar                 500000              2867 ns/op             192 B/op          9 allocs/op
+// BenchmarkArray                    300000              4133 ns/op             344 B/op         17 allocs/op
+// BenchmarkArrayInArray             200000             10771 ns/op            1016 B/op         47 allocs/op
+// BenchmarkBasicBlock               200000              9116 ns/op             864 B/op         40 allocs/op
+// BenchmarkBlockWithOutsideVar      200000              9389 ns/op             912 B/op         42 allocs/op
+// BenchmarkEscape                   200000              8881 ns/op             864 B/op         29 allocs/op
+// BenchmarkPartialInPartial         100000             10486 ns/op            1176 B/op         44 allocs/op <- extra 3 allocs seem to be coming from mFile{}
