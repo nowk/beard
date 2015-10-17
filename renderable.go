@@ -205,7 +205,7 @@ func (r *Renderable) handleVar(v []byte) ([]byte, error) {
 
 	// TODO how to handle/detect unclosed blocks
 
-	return r.getValue(string(tag)), nil
+	return r.getValue(tag), nil
 }
 
 func (r *Renderable) newBlock(tag string, c int) *block {
