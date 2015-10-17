@@ -5,13 +5,26 @@ import (
 	"io"
 )
 
+// File is a simplifed interface of io.ReadSeeker
+type File interface {
+	Read([]byte) (int, error)
+	Seek(int64, int) (int64, error)
+}
+
+type PartialFunc func(string) (File, error)
+
 type Template struct {
 	// File is the template file to be rendered. File must be explicitly closed
 	// by the user
-	File io.ReadSeeker
+	File File
 
 	// Data is the data set to be used when compiling variables into the html
 	Data *Data
+
+	// PartialFunc is a user defined function to return the File to be rendered
+	// as a partial. This function will be passed to all partial chains started
+	// by this template.
+	PartialFunc PartialFunc
 
 	// del represents the current delimiter
 	del Delim
@@ -32,6 +45,10 @@ type Template struct {
 	// blocks are added in a FILO order. The last block in the list would be the
 	// current block
 	blocks []*block
+
+	// partial is set when rendering a partial and unset when finished. Only one
+	// partial can be rendered at any given time for a single template
+	partial *Template
 }
 
 var _ io.Reader = &Template{}
@@ -39,6 +56,21 @@ var _ io.Reader = &Template{}
 func (t *Template) Read(p []byte) (int, error) {
 	lenp := len(p)
 	writ := 0
+
+	if t.partial != nil {
+		// TODO partials need to find a way to close itself
+		n, err := t.partial.Read(p)
+		if err == nil {
+			return n, nil
+		}
+		if err != io.EOF {
+			return n, err
+		}
+
+		t.partial = nil
+
+		writ = n
+	}
 
 	// flush trucncated out to write
 	if lent := len(t.truncd); lent > 0 {
@@ -117,7 +149,7 @@ func (t *Template) Read(p []byte) (int, error) {
 			n = lenp - writ
 			t.truncd = val[n:]
 		} else {
-			n -= writ
+			// n -= writ
 			t.truncd = t.truncd[:0]
 		}
 
@@ -207,6 +239,21 @@ func (t *Template) handleVar(v []byte) ([]byte, error) {
 	case '&':
 		tag = tag[1:]
 		esc = false
+
+	case '>':
+		file, err := t.PartialFunc(tag[1:])
+		if err != nil {
+			// TODO handle
+		}
+
+		t.partial = &Template{
+			File: file,
+			Data: t.Data,
+
+			PartialFunc: t.PartialFunc,
+		}
+
+		return nil, nil
 	}
 	// TODO how to handle/detect unclosed blocks
 
@@ -332,4 +379,9 @@ func (t *Template) flush(p []byte) (int, []byte) {
 	}
 
 	return i, t.truncd[i:]
+}
+
+// Partial sets the PartialFunc
+func (t *Template) Partial(fn PartialFunc) {
+	t.PartialFunc = fn
 }

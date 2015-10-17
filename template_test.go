@@ -348,6 +348,37 @@ func TestTemplateNotEscapeDelimDoesNotAttemptToMatch(t *testing.T) {
 		And(errorIs(nil))
 }
 
+func TestTemplatePartial(t *testing.T) {
+	html := `<h1>{{a}}{{>b}}{{e}}</h1>`
+	data := map[string]interface{}{
+		"a": "Hello",
+		"d": "World",
+		"e": "!",
+	}
+
+	var exp = `<h1>Hello World!</h1>`
+
+	tmpl := &Template{
+		File: bytes.NewReader([]byte(html)),
+		Data: &Data{Value: data},
+	}
+	tmpl.Partial(func(path string) (File, error) {
+		var p []byte
+		if path == "b" {
+			p = []byte(` {{>c}}`)
+		} else {
+			p = []byte(`{{d}}`)
+		}
+
+		return bytes.NewReader(p), nil
+	})
+
+	Asser{t}.
+		Given(a(tmpl)).
+		Then(bodyEquals(exp)).
+		And(errorIs(nil))
+}
+
 func TestTemplateErrorsUnclosedBlock(t *testing.T) {
 	t.Skip()
 }
