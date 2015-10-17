@@ -56,15 +56,15 @@ func (d *Rdelim) Value() []byte {
 
 func matchDelim(b, del []byte) ([]byte, matchLevel) {
 	lenb := len(b)
-	lend := len(del)
+	lendel := len(del)
 
 	// find the delim in full
 	if i := bytes.Index(b, del); i != -1 {
-		return b[:i+lend], exMatch
+		return b[:i+lendel], exMatch
 	}
 
 	// find a partial match
-	z := lend - 1
+	z := lendel - 1
 	for ; z > 0; z-- {
 		i := bytes.Index(b, del[:z])
 		if i == -1 {
