@@ -372,7 +372,7 @@ func TestTemplatePartial(t *testing.T) {
 		File: mFile{bytes.NewReader([]byte(html))},
 		Data: &Data{Value: data},
 	}
-	tmpl.Partial(func(path string) (File, error) {
+	tmpl.Partial(func(path string) (interface{}, error) {
 		var p []byte
 		if path == "b" {
 			p = []byte(` {{>c}}`)
@@ -421,7 +421,7 @@ func TestTemplateClosesPartials(t *testing.T) {
 		File: mFile{bytes.NewReader([]byte(html))},
 		Data: &Data{Value: data},
 	}
-	tmpl.Partial(func(path string) (File, error) {
+	tmpl.Partial(func(path string) (interface{}, error) {
 		var p []byte
 		if path == "b" {
 			p = []byte(` {{>c}}`)

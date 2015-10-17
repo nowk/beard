@@ -15,7 +15,7 @@ type File interface {
 	Close() error
 }
 
-type PartialFunc func(string) (File, error)
+type PartialFunc func(string) (interface{}, error)
 
 type Template struct {
 	// File is the template file to be rendered. File must be explicitly closed
@@ -26,8 +26,8 @@ type Template struct {
 	Data *Data
 
 	// PartialFunc is a user defined function to return the File to be rendered
-	// as a partial. This function will be passed to all partial chains started
-	// by this template.
+	// as a partial. This function is inherited by inner partials, unless
+	// already predefined (eg. layouts)
 	PartialFunc PartialFunc
 
 	// del represents the current delimiter
@@ -248,16 +248,26 @@ func (t *Template) handleVar(v []byte) ([]byte, error) {
 		esc = false
 
 	case '>':
-		file, err := t.PartialFunc(tag[1:])
+		inf, err := t.PartialFunc(tag[1:])
 		if err != nil {
 			// TODO handle
 		}
 
-		t.partial = &Template{
-			File: file,
-			Data: t.Data,
+		switch v := inf.(type) {
+		case File:
+			t.partial = &Template{
+				File: v,
+				Data: t.Data,
+			}
+		case *Template:
+			t.partial = v
+		default:
+			// TODO handle
+		}
 
-			PartialFunc: t.PartialFunc,
+		// inherit PartialFunc, if applicable
+		if t.partial.PartialFunc == nil {
+			t.partial.PartialFunc = t.PartialFunc
 		}
 
 		return nil, nil

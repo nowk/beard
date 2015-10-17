@@ -226,7 +226,7 @@ func BenchmarkPartialInPartial(b *testing.B) {
 		File: mFile{bytes.NewReader([]byte(html))},
 		Data: &Data{Value: data},
 	}
-	tmpl.Partial(func(path string) (File, error) {
+	tmpl.Partial(func(path string) (interface{}, error) {
 		var p []byte
 		switch path {
 		case "a":
