@@ -1,7 +1,9 @@
 package beard
 
 import (
+	"fmt"
 	"reflect"
+	"strconv"
 	"strings"
 )
 
@@ -55,20 +57,25 @@ func (d *Data) Index(n int) *Data {
 }
 
 func (d *Data) Bytes() []byte {
-	// if we can type assert value, do it!
+	var b []byte
 	switch t := d.Value.(type) {
 	case string:
 		return []byte(t)
+	case int:
+		return strconv.AppendInt(b, int64(t), 10)
+	case int64:
+		return strconv.AppendInt(b, t, 10)
+	case float64:
+		return strconv.AppendFloat(b, float64(t), 'G', -1, 64)
+	case bool:
+		return strconv.AppendBool(b, t)
+	case []byte:
+		return t
 	case reflect.Value:
 		return []byte(t.String())
-	}
 
-	// else we must reflect more
-	v := d.ValueOf()
-
-	switch v.Kind() {
-	case reflect.String:
-		return []byte(v.String())
+	default:
+		return []byte(fmt.Sprintf("%s", t))
 	}
 
 	return nil
