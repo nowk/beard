@@ -66,12 +66,12 @@ func (r *Renderable) Read(p []byte) (int, error) {
 		}
 	}
 
-	// if we have no buf assign, else append with what was written
+	// alloc buf with a cap of n
+	// we do need a separate allocated block here.
 	if r.buf == nil {
-		r.buf = p[:n]
-	} else {
-		r.buf = append(r.buf, p[writ:writ+n]...)
+		r.buf = make([]byte, 0, n)
 	}
+	r.buf = append(r.buf, p[writ:writ+n]...)
 
 	// trim p, so we can start from it's last written point
 	p = p[:writ]
@@ -137,7 +137,7 @@ func (r *Renderable) Read(p []byte) (int, error) {
 	}
 
 	n = writ
-	if r.eof && len(r.buf) == 0 {
+	if r.eof && len(r.buf) == 0 && len(r.truncd) == 0 {
 		return n, io.EOF
 	}
 
