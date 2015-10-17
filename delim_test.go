@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func Test_matchDelim(t *testing.T) {
+func Test_ldelim(t *testing.T) {
 	for _, v := range []struct {
 		giv string
 		del string
@@ -20,7 +20,32 @@ func Test_matchDelim(t *testing.T) {
 		{"hello {c}", "{{", "hello {c}", noMatch},
 		{"hello {c}", "{{{", "hello {c}", noMatch},
 		{"hello {{c}}", "{{{", "hello {{c}}", noMatch},
+	} {
+		var exp = struct {
+			byt []byte
+			ma  matchLevel
+		}{
+			[]byte(v.exp), v.ma,
+		}
 
+		byt, ma := (&Ldelim{[]byte(v.del)}).Match([]byte(v.giv))
+		if exp.ma != ma {
+			t.Errorf("expected a level %d match, got %d: %s %s",
+				exp.ma, ma, v.giv, v.del)
+		}
+
+		if !reflect.DeepEqual(exp.byt, byt) {
+			t.Errorf("expected %s, got %s", string(exp.byt), string(byt))
+		}
+	}
+}
+func Test_rdelim(t *testing.T) {
+	for _, v := range []struct {
+		giv string
+		del string
+		exp string
+		ma  matchLevel
+	}{
 		{"c}}</h1>", "}}", "c}}", exMatch},
 		{"c}}}</h1>", "}}", "c}}", exMatch},
 		{"c}", "}}", "c}", paMatch},
@@ -37,7 +62,7 @@ func Test_matchDelim(t *testing.T) {
 			[]byte(v.exp), v.ma,
 		}
 
-		byt, ma := matchDelim([]byte(v.giv), []byte(v.del))
+		byt, ma := (&Rdelim{[]byte(v.del)}).Match([]byte(v.giv))
 		if exp.ma != ma {
 			t.Errorf("expected a level %d match, got %d: %s %s",
 				exp.ma, ma, v.giv, v.del)

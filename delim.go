@@ -4,11 +4,6 @@ import (
 	"bytes"
 )
 
-var (
-	ldelim = []byte("{{")
-	rdelim = []byte("}}")
-)
-
 type matchLevel int
 
 const (
@@ -18,6 +13,46 @@ const (
 	paMatch
 	exMatch
 )
+
+type Delim interface {
+	Match([]byte) ([]byte, matchLevel)
+
+	// Value should return the actual Delimeter value in []byte, eg {{ or }}
+	Value() []byte
+}
+
+var (
+	ldelim = &Ldelim{Delim: []byte("{{")}
+	rdelim = &Rdelim{Delim: []byte("}}")}
+)
+
+type Ldelim struct {
+	Delim []byte
+}
+
+var _ Delim = &Ldelim{}
+
+func (d *Ldelim) Match(b []byte) ([]byte, matchLevel) {
+	return matchDelim(b, d.Delim)
+}
+
+func (d *Ldelim) Value() []byte {
+	return d.Delim
+}
+
+type Rdelim struct {
+	Delim []byte
+}
+
+var _ Delim = &Rdelim{}
+
+func (d *Rdelim) Match(b []byte) ([]byte, matchLevel) {
+	return matchDelim(b, d.Delim)
+}
+
+func (d *Rdelim) Value() []byte {
+	return d.Delim
+}
 
 func matchDelim(b, del []byte) ([]byte, matchLevel) {
 	lenb := len(b)

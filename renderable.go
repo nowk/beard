@@ -14,7 +14,7 @@ type Renderable struct {
 	Data *Data
 
 	// del represents the current delimiter
-	del []byte
+	del Delim
 
 	// buf holds bytes that end with a partially matched delimiter. It will
 	// attempt an exact match on the next read
@@ -76,14 +76,14 @@ func (r *Renderable) Read(p []byte) (int, error) {
 	// trim p, so we can start from it's last written point
 	p = p[:writ]
 
-	switch b, ma := matchDelim(r.buf, r.delim()); ma {
+	switch b, ma := r.delim().Match(r.buf); ma {
 	case paMatch:
 		r.buf = b
 
 	case exMatch:
 		var (
 			lenb   = len(b)
-			lentag = lenb - len(r.delim())
+			lentag = lenb - len(r.delim().Value())
 
 			del = b[lentag:]
 			tag = b[:lentag]
@@ -97,7 +97,7 @@ func (r *Renderable) Read(p []byte) (int, error) {
 
 		// when we find a matching rdelim, {{..}} has been closed and we can now
 		// parse for the var value
-		if bytes.Equal(del, rdelim) {
+		if bytes.Equal(del, rdelim.Value()) {
 			val, err = r.handleVar(tag)
 			if err != nil {
 				return writ, err
@@ -145,7 +145,7 @@ func (r *Renderable) Read(p []byte) (int, error) {
 }
 
 // delim returns the "current" delim in the Renderable, it defaults to ldelim.
-func (r *Renderable) delim() []byte {
+func (r *Renderable) delim() Delim {
 	if r.del == nil {
 		return ldelim
 	}
@@ -155,7 +155,7 @@ func (r *Renderable) delim() []byte {
 
 // swapDelim swaps the delim on a Renderable.
 func (r *Renderable) swapDelim() {
-	if bytes.Equal(r.delim(), ldelim) {
+	if bytes.Equal(r.delim().Value(), ldelim.Value()) {
 		r.del = rdelim
 	} else {
 		r.del = ldelim
