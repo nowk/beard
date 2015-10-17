@@ -222,7 +222,7 @@ func (t *Template) handleVar(v []byte) ([]byte, error) {
 		if bl.tag != tag {
 			// TODO error: non-matching block
 		}
-		if bl.increment(); bl.isFinished() {
+		if bl.Increment(); bl.IsFinished() {
 			t.popBlock()
 
 			return nil, nil

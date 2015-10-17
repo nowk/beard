@@ -25,18 +25,18 @@ func (b *block) Data() *Data {
 	return b.data
 }
 
-// increment increments and returns the current iterd
+// Increment increments and returns the current iterd
 // All block types must explicitly call increment after they have been read
 // through.
-func (b *block) increment() int {
+func (b *block) Increment() int {
 	b.iterd++
 
 	return b.iterd
 }
 
-// isFinished checks to see if the block has finished and should be exited
+// IsFinished checks to see if the block has finished and should be exited
 // This assumes that increment has been explicitly called after each a block has
 // been read through.
-func (b *block) isFinished() bool {
+func (b *block) IsFinished() bool {
 	return !(b.iterd < b.data.Len())
 }

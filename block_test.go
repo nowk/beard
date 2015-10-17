@@ -9,14 +9,14 @@ func Test_blockisFinished(t *testing.T) {
 		"a", "b",
 	}})
 
-	if bl.isFinished() {
+	if bl.IsFinished() {
 		t.Errorf("expected block to not be finished")
 	}
 
-	bl.increment()
-	bl.increment()
+	bl.Increment()
+	bl.Increment()
 
-	if !bl.isFinished() {
+	if !bl.IsFinished() {
 		t.Errorf("expected block to be finished")
 	}
 }
@@ -36,7 +36,7 @@ func Test_blockgetValueDotOnSlice(t *testing.T) {
 		}
 	}
 
-	bl.increment()
+	bl.Increment()
 
 	{
 		var exp = "b"
@@ -71,7 +71,7 @@ func Test_blockgetValuePathOnSlice(t *testing.T) {
 		}
 	}
 
-	bl.increment()
+	bl.Increment()
 
 	{
 		var exp = "World"
