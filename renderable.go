@@ -183,7 +183,7 @@ func (r *Renderable) handleVar(v []byte) ([]byte, error) {
 		if bl == nil {
 			// TODO handle
 		}
-		if bl.tag == tag {
+		if bl.tag != tag {
 			// TODO handle
 		}
 		if bl.increment(); bl.isFinished() {
