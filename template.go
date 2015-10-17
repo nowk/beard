@@ -143,13 +143,15 @@ func (t *Template) Read(p []byte) (int, error) {
 
 		// combine truncated with current value and write
 		val = append(t.truncd, val...)
-
 		n := len(val)
-		if n > lenp {
-			n = lenp - writ
+
+		// amount to be written must fit in with in the available space that has
+		// yet to be written on p. If we have more to write, truncate for next
+		// Read
+		if availn := lenp - writ; n > availn {
+			n = availn
 			t.truncd = val[n:]
 		} else {
-			// n -= writ
 			t.truncd = t.truncd[:0]
 		}
 
