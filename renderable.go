@@ -168,6 +168,8 @@ func (r *Renderable) handleVar(v []byte) ([]byte, error) {
 		// TODO handle if tag is empty
 	}
 
+	esc := true
+
 	switch tag[0] {
 	case '#':
 		bl := r.newBlock(tag, r.cursor)
@@ -201,11 +203,19 @@ func (r *Renderable) handleVar(v []byte) ([]byte, error) {
 		_, err := r.File.Seek(int64(r.cursor), 0)
 
 		return nil, err
-	}
 
+	case '&':
+		tag = tag[1:]
+		esc = false
+	}
 	// TODO how to handle/detect unclosed blocks
 
-	return r.getValue(tag), nil
+	val := r.getValue(tag)
+	if esc {
+		val = escapeBytes(val)
+	}
+
+	return val, nil
 }
 
 func (r *Renderable) newBlock(tag string, c int) *block {

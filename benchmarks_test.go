@@ -182,8 +182,41 @@ func BenchmarkBlockWithOutsideVar(b *testing.B) {
 	}
 }
 
-// BenchmarkBasicVar                 500000              2338 ns/op             192 B/op          9 allocs/op
-// BenchmarkArray                    300000              4024 ns/op             344 B/op         17 allocs/op
-// BenchmarkArrayInArray             200000             10226 ns/op            1016 B/op         47 allocs/op
-// BenchmarkBasicBlock               200000              7896 ns/op             864 B/op         40 allocs/op
-// BenchmarkBlockWithOutsideVar      200000              8213 ns/op             912 B/op         42 allocs/op
+func BenchmarkEscape(b *testing.B) {
+	tmpl := `<code>{{c}}{{c}}{{c}}</code>`
+	data := map[string]interface{}{
+		"c": "<h1>Hello World!</h1>",
+	}
+
+	rend := &Renderable{
+		File: bytes.NewReader([]byte(tmpl)),
+		Data: &Data{Value: data},
+	}
+
+	buf := bytes.NewBuffer(nil)
+
+	b.ReportAllocs()
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		b.StopTimer()
+
+		rend.File.Seek(0, 0)
+		rend.blocks = rend.blocks[:0]
+		buf.Reset()
+
+		b.StartTimer()
+
+		_, err := io.Copy(buf, rend)
+		if err != nil {
+			b.Fatal(err)
+		}
+	}
+}
+
+// BenchmarkBasicVar                 500000              2954 ns/op             192 B/op          9 allocs/op
+// BenchmarkArray                    300000              4698 ns/op             344 B/op         17 allocs/op
+// BenchmarkArrayInArray             200000             10862 ns/op            1016 B/op         47 allocs/op
+// BenchmarkBasicBlock               200000              9483 ns/op             864 B/op         40 allocs/op
+// BenchmarkBlockWithOutsideVar      200000              9945 ns/op             912 B/op         42 allocs/op
+// BenchmarkEscape                   200000              9766 ns/op             864 B/op         29 allocs/op

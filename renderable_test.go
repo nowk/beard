@@ -291,13 +291,52 @@ func TestRenderableOutsideOfBlockVarUsesClosestVar(t *testing.T) {
 		And(errorIs(nil))
 }
 
+func TestRenderableEscapesStrings(t *testing.T) {
+	tmpl := `<code>{{code}}</code>`
+	data := map[string]interface{}{
+		"code": "<h1>Hello World!</h1>",
+	}
+
+	var exp = `<code>&lt;h1&gt;Hello World!&lt;/h1&gt;</code>`
+
+	rend := &Renderable{
+		File: bytes.NewReader([]byte(tmpl)),
+		Data: &Data{Value: data},
+	}
+
+	Asser{t}.
+		Given(a(rend)).
+		Then(bodyEquals(exp)).
+		And(errorIs(nil))
+}
+
+func TestRenderableDontEscapesStrings(t *testing.T) {
+	tmpl := `<code>{{&code}}</code>`
+	data := map[string]interface{}{
+		"code": "<h1>Hello World!</h1>",
+	}
+
+	var exp = `<code><h1>Hello World!</h1></code>`
+
+	rend := &Renderable{
+		File: bytes.NewReader([]byte(tmpl)),
+		Data: &Data{Value: data},
+	}
+
+	Asser{t}.
+		Given(a(rend)).
+		Then(bodyEquals(exp)).
+		And(errorIs(nil))
+}
+
 func TestRenderableErrorsUnclosedBlock(t *testing.T) {
 	t.Skip()
 }
 
 var a = func(rend *Renderable) StepFunc {
 	return func(t testing.TB, ctx Context) {
-		buf := bytes.NewBuffer(nil)
+		var buffer = make([]byte, 0, 32)
+		buf := bytes.NewBuffer(buffer)
 		n, err := io.Copy(buf, rend)
 
 		ctx.Set("rend", rend)
