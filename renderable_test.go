@@ -329,6 +329,25 @@ func TestRenderableDontEscapesStrings(t *testing.T) {
 		And(errorIs(nil))
 }
 
+func TestRenderableNotEscapeDelimDoesNotAttemptToMatch(t *testing.T) {
+	tmpl := `<code>{{&code}}</code>`
+	data := map[string]interface{}{
+		"code": "{{c}}",
+	}
+
+	var exp = `<code>{{c}}</code>`
+
+	rend := &Renderable{
+		File: bytes.NewReader([]byte(tmpl)),
+		Data: &Data{Value: data},
+	}
+
+	Asser{t}.
+		Given(a(rend)).
+		Then(bodyEquals(exp)).
+		And(errorIs(nil))
+}
+
 func TestRenderableErrorsUnclosedBlock(t *testing.T) {
 	t.Skip()
 }
