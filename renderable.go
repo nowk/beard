@@ -173,7 +173,7 @@ func (r *Renderable) handleVar(v []byte) ([]byte, error) {
 		bl := r.newBlock(tag, r.cursor)
 		// bl := r.newBlock(tag, r.cursor-(len(v)+len(rdelim)+len(ldelim)))
 		if bl == nil {
-			// TODO handle
+			// TODO not sure how this can actually happen...?
 		}
 
 		return v[:0], nil
@@ -181,10 +181,10 @@ func (r *Renderable) handleVar(v []byte) ([]byte, error) {
 	case '/':
 		_, bl := r.currentBlock()
 		if bl == nil {
-			// TODO handle
+			// TODO error: invalid block
 		}
 		if bl.tag != tag {
-			// TODO handle
+			// TODO error: non-matching block
 		}
 		if bl.increment(); bl.isFinished() {
 			r.popBlock()
@@ -202,6 +202,8 @@ func (r *Renderable) handleVar(v []byte) ([]byte, error) {
 
 		return nil, err
 	}
+
+	// TODO how to handle/detect unclosed blocks
 
 	return r.getValue(string(tag)), nil
 }
