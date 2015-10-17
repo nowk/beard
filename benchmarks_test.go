@@ -7,13 +7,13 @@ import (
 )
 
 func BenchmarkBasicVar(b *testing.B) {
-	tmpl := `<h1>Hello {{c}}</h1>`
+	html := `<h1>Hello {{c}}</h1>`
 	data := map[string]interface{}{
 		"c": "world!",
 	}
 
-	rend := &Renderable{
-		File: bytes.NewReader([]byte(tmpl)),
+	tmpl := &Template{
+		File: bytes.NewReader([]byte(html)),
 		Data: &Data{Value: data},
 	}
 
@@ -25,13 +25,13 @@ func BenchmarkBasicVar(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		b.StopTimer()
 
-		rend.File.Seek(0, 0)
-		rend.blocks = rend.blocks[:0]
+		tmpl.File.Seek(0, 0)
+		tmpl.blocks = tmpl.blocks[:0]
 		buf.Reset()
 
 		b.StartTimer()
 
-		_, err := io.Copy(buf, rend)
+		_, err := io.Copy(buf, tmpl)
 		if err != nil {
 			b.Fatal(err)
 		}
@@ -39,15 +39,15 @@ func BenchmarkBasicVar(b *testing.B) {
 }
 
 func BenchmarkArray(b *testing.B) {
-	tmpl := `{{#words}}({{.}}){{/words}}`
+	html := `{{#words}}({{.}}){{/words}}`
 	data := map[string]interface{}{
 		"words": []string{
 			"a", "b", "c",
 		},
 	}
 
-	rend := &Renderable{
-		File: bytes.NewReader([]byte(tmpl)),
+	tmpl := &Template{
+		File: bytes.NewReader([]byte(html)),
 		Data: &Data{Value: data},
 	}
 
@@ -59,13 +59,13 @@ func BenchmarkArray(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		b.StopTimer()
 
-		rend.File.Seek(0, 0)
-		rend.blocks = rend.blocks[:0]
+		tmpl.File.Seek(0, 0)
+		tmpl.blocks = tmpl.blocks[:0]
 		buf.Reset()
 
 		b.StartTimer()
 
-		_, err := io.Copy(buf, rend)
+		_, err := io.Copy(buf, tmpl)
 		if err != nil {
 			b.Fatal(err)
 		}
@@ -73,15 +73,15 @@ func BenchmarkArray(b *testing.B) {
 }
 
 func BenchmarkArrayInArray(b *testing.B) {
-	tmpl := `{{#words}}({{.}}){{#words}}({{.}}){{#words}}({{.}}){{/words}}{{/words}}{{/words}}`
+	html := `{{#words}}({{.}}){{#words}}({{.}}){{#words}}({{.}}){{/words}}{{/words}}{{/words}}`
 	data := map[string]interface{}{
 		"words": []string{
 			"a", "b", "c",
 		},
 	}
 
-	rend := &Renderable{
-		File: bytes.NewReader([]byte(tmpl)),
+	tmpl := &Template{
+		File: bytes.NewReader([]byte(html)),
 		Data: &Data{Value: data},
 	}
 
@@ -93,13 +93,13 @@ func BenchmarkArrayInArray(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		b.StopTimer()
 
-		rend.File.Seek(0, 0)
-		rend.blocks = rend.blocks[:0]
+		tmpl.File.Seek(0, 0)
+		tmpl.blocks = tmpl.blocks[:0]
 		buf.Reset()
 
 		b.StartTimer()
 
-		_, err := io.Copy(buf, rend)
+		_, err := io.Copy(buf, tmpl)
 		if err != nil {
 			b.Fatal(err)
 		}
@@ -107,7 +107,7 @@ func BenchmarkArrayInArray(b *testing.B) {
 }
 
 func BenchmarkBasicBlock(b *testing.B) {
-	tmpl := `<h1>{{#greeting}}{{a}} {{b}}{{c.d}}{{/greeting}}</h1>`
+	html := `<h1>{{#greeting}}{{a}} {{b}}{{c.d}}{{/greeting}}</h1>`
 	data := map[string]interface{}{
 		"greeting": map[string]interface{}{
 			"a": "Hello",
@@ -118,8 +118,8 @@ func BenchmarkBasicBlock(b *testing.B) {
 		},
 	}
 
-	rend := &Renderable{
-		File: bytes.NewReader([]byte(tmpl)),
+	tmpl := &Template{
+		File: bytes.NewReader([]byte(html)),
 		Data: &Data{Value: data},
 	}
 
@@ -131,13 +131,13 @@ func BenchmarkBasicBlock(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		b.StopTimer()
 
-		rend.File.Seek(0, 0)
-		rend.blocks = rend.blocks[:0]
+		tmpl.File.Seek(0, 0)
+		tmpl.blocks = tmpl.blocks[:0]
 		buf.Reset()
 
 		b.StartTimer()
 
-		_, err := io.Copy(buf, rend)
+		_, err := io.Copy(buf, tmpl)
 		if err != nil {
 			b.Fatal(err)
 		}
@@ -145,7 +145,7 @@ func BenchmarkBasicBlock(b *testing.B) {
 }
 
 func BenchmarkBlockWithOutsideVar(b *testing.B) {
-	tmpl := `<h1>{{#greeting}}{{a}} {{b}}{{c.d}}{{/greeting}}</h1>`
+	html := `<h1>{{#greeting}}{{a}} {{b}}{{c.d}}{{/greeting}}</h1>`
 	data := map[string]interface{}{
 		"a": "Hello",
 		"greeting": map[string]interface{}{
@@ -156,8 +156,8 @@ func BenchmarkBlockWithOutsideVar(b *testing.B) {
 		},
 	}
 
-	rend := &Renderable{
-		File: bytes.NewReader([]byte(tmpl)),
+	tmpl := &Template{
+		File: bytes.NewReader([]byte(html)),
 		Data: &Data{Value: data},
 	}
 
@@ -169,13 +169,13 @@ func BenchmarkBlockWithOutsideVar(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		b.StopTimer()
 
-		rend.File.Seek(0, 0)
-		rend.blocks = rend.blocks[:0]
+		tmpl.File.Seek(0, 0)
+		tmpl.blocks = tmpl.blocks[:0]
 		buf.Reset()
 
 		b.StartTimer()
 
-		_, err := io.Copy(buf, rend)
+		_, err := io.Copy(buf, tmpl)
 		if err != nil {
 			b.Fatal(err)
 		}
@@ -183,13 +183,13 @@ func BenchmarkBlockWithOutsideVar(b *testing.B) {
 }
 
 func BenchmarkEscape(b *testing.B) {
-	tmpl := `<code>{{c}}{{c}}{{c}}</code>`
+	html := `<code>{{c}}{{c}}{{c}}</code>`
 	data := map[string]interface{}{
 		"c": "<h1>Hello World!</h1>",
 	}
 
-	rend := &Renderable{
-		File: bytes.NewReader([]byte(tmpl)),
+	tmpl := &Template{
+		File: bytes.NewReader([]byte(html)),
 		Data: &Data{Value: data},
 	}
 
@@ -201,13 +201,13 @@ func BenchmarkEscape(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		b.StopTimer()
 
-		rend.File.Seek(0, 0)
-		rend.blocks = rend.blocks[:0]
+		tmpl.File.Seek(0, 0)
+		tmpl.blocks = tmpl.blocks[:0]
 		buf.Reset()
 
 		b.StartTimer()
 
-		_, err := io.Copy(buf, rend)
+		_, err := io.Copy(buf, tmpl)
 		if err != nil {
 			b.Fatal(err)
 		}

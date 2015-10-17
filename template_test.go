@@ -6,14 +6,14 @@ import (
 	"testing"
 )
 
-func TestRenderableBufTruncdOut(t *testing.T) {
-	tmpl := `<h1>Hello {{c}}</h1>`
+func TestTemplateBufTruncdOut(t *testing.T) {
+	html := `<h1>Hello {{c}}</h1>`
 	data := map[string]interface{}{
 		"c": "world!",
 	}
 
-	rend := &Renderable{
-		File: bytes.NewReader([]byte(tmpl)),
+	tmpl := &Template{
+		File: bytes.NewReader([]byte(html)),
 		Data: &Data{Value: data},
 	}
 
@@ -44,17 +44,17 @@ func TestRenderableBufTruncdOut(t *testing.T) {
 
 		buf := make([]byte, exp.n)
 
-		n, err := rend.Read(buf)
+		n, err := tmpl.Read(buf)
 		if err != exp.err {
 			t.Errorf("expected %s  error, got %s", exp.err, err)
 		}
 		if got := n; exp.nread != got {
 			t.Errorf("expected to read %d bytes, read %d", exp.nread, got)
 		}
-		if got := string(rend.buf); exp.buf != got {
+		if got := string(tmpl.buf); exp.buf != got {
 			t.Errorf("expected buf %s, got %s", exp.buf, got)
 		}
-		if got := string(rend.truncd); exp.truncd != got {
+		if got := string(tmpl.truncd); exp.truncd != got {
 			t.Errorf("expected truncd %s, got %s", exp.truncd, got)
 		}
 		if got := string(buf[:n]); exp.out != got {
@@ -69,8 +69,8 @@ func TestRenderableBufTruncdOut(t *testing.T) {
 	}
 }
 
-func TestRenderableBasicVariables(t *testing.T) {
-	tmpl := `<h1>{{a}} {{b}}{{c}}</h1>`
+func TestTemplateBasicVariables(t *testing.T) {
+	html := `<h1>{{a}} {{b}}{{c}}</h1>`
 	data := map[string]interface{}{
 		"a": "Hello",
 		"b": "World",
@@ -79,19 +79,19 @@ func TestRenderableBasicVariables(t *testing.T) {
 
 	var exp = `<h1>Hello World!</h1>`
 
-	rend := &Renderable{
-		File: bytes.NewReader([]byte(tmpl)),
+	tmpl := &Template{
+		File: bytes.NewReader([]byte(html)),
 		Data: &Data{Value: data},
 	}
 
 	Asser{t}.
-		Given(a(rend)).
+		Given(a(tmpl)).
 		Then(bodyEquals(exp)).
 		And(errorIs(nil))
 }
 
-func TestRenderableArrayBlock(t *testing.T) {
-	tmpl := `{{#words}}({{.}})({{.}}){{/words}}`
+func TestTemplateArrayBlock(t *testing.T) {
+	html := `{{#words}}({{.}})({{.}}){{/words}}`
 	data := map[string]interface{}{
 		"words": []interface{}{
 			"a", "b", "c",
@@ -100,19 +100,19 @@ func TestRenderableArrayBlock(t *testing.T) {
 
 	var exp = `(a)(a)(b)(b)(c)(c)`
 
-	rend := &Renderable{
-		File: bytes.NewReader([]byte(tmpl)),
+	tmpl := &Template{
+		File: bytes.NewReader([]byte(html)),
 		Data: &Data{Value: data},
 	}
 
 	Asser{t}.
-		Given(a(rend)).
+		Given(a(tmpl)).
 		Then(bodyEquals(exp)).
 		And(errorIs(nil))
 }
 
-func TestRenderableSameArrayInArray(t *testing.T) {
-	tmpl := `{{#words}}({{.}}){{#words}}({{.}}){{/words}}{{/words}}`
+func TestTemplateSameArrayInArray(t *testing.T) {
+	html := `{{#words}}({{.}}){{#words}}({{.}}){{/words}}{{/words}}`
 	data := map[string]interface{}{
 		"words": []interface{}{
 			"a", "b", "c",
@@ -121,19 +121,19 @@ func TestRenderableSameArrayInArray(t *testing.T) {
 
 	var exp = `(a)(a)(b)(c)(b)(a)(b)(c)(c)(a)(b)(c)`
 
-	rend := &Renderable{
-		File: bytes.NewReader([]byte(tmpl)),
+	tmpl := &Template{
+		File: bytes.NewReader([]byte(html)),
 		Data: &Data{Value: data},
 	}
 
 	Asser{t}.
-		Given(a(rend)).
+		Given(a(tmpl)).
 		Then(bodyEquals(exp)).
 		And(errorIs(nil))
 }
 
-func TestRenderableVarPath(t *testing.T) {
-	tmpl := `<h1>{{a}} {{b.c}}{{d}}</h1>`
+func TestTemplateVarPath(t *testing.T) {
+	html := `<h1>{{a}} {{b.c}}{{d}}</h1>`
 	data := map[string]interface{}{
 		"a": "Hello",
 		"b": map[string]interface{}{
@@ -144,19 +144,19 @@ func TestRenderableVarPath(t *testing.T) {
 
 	var exp = `<h1>Hello World!</h1>`
 
-	rend := &Renderable{
-		File: bytes.NewReader([]byte(tmpl)),
+	tmpl := &Template{
+		File: bytes.NewReader([]byte(html)),
 		Data: &Data{Value: data},
 	}
 
 	Asser{t}.
-		Given(a(rend)).
+		Given(a(tmpl)).
 		Then(bodyEquals(exp)).
 		And(errorIs(nil))
 }
 
-func TestRenderableArrayOfObjects(t *testing.T) {
-	tmpl := `{{#words}}({{wo.rd}})({{wo.rd}}){{/words}}`
+func TestTemplateArrayOfObjects(t *testing.T) {
+	html := `{{#words}}({{wo.rd}})({{wo.rd}}){{/words}}`
 	data := map[string]interface{}{
 		"words": []map[string]interface{}{
 			map[string]interface{}{
@@ -179,19 +179,19 @@ func TestRenderableArrayOfObjects(t *testing.T) {
 
 	var exp = `(a)(a)(b)(b)(c)(c)`
 
-	rend := &Renderable{
-		File: bytes.NewReader([]byte(tmpl)),
+	tmpl := &Template{
+		File: bytes.NewReader([]byte(html)),
 		Data: &Data{Value: data},
 	}
 
 	Asser{t}.
-		Given(a(rend)).
+		Given(a(tmpl)).
 		Then(bodyEquals(exp)).
 		And(errorIs(nil))
 }
 
-func TestRenderableArrayInPath(t *testing.T) {
-	tmpl := `{{#lots.o.words}}({{.}})({{.}}){{/lots.o.words}}`
+func TestTemplateArrayInPath(t *testing.T) {
+	html := `{{#lots.o.words}}({{.}})({{.}}){{/lots.o.words}}`
 	data := map[string]interface{}{
 		"lots": map[string]interface{}{
 			"o": map[string]interface{}{
@@ -204,19 +204,19 @@ func TestRenderableArrayInPath(t *testing.T) {
 
 	var exp = `(a)(a)(b)(b)(c)(c)`
 
-	rend := &Renderable{
-		File: bytes.NewReader([]byte(tmpl)),
+	tmpl := &Template{
+		File: bytes.NewReader([]byte(html)),
 		Data: &Data{Value: data},
 	}
 
 	Asser{t}.
-		Given(a(rend)).
+		Given(a(tmpl)).
 		Then(bodyEquals(exp)).
 		And(errorIs(nil))
 }
 
-func TestRenderableObjectBlock(t *testing.T) {
-	tmpl := `<h1>{{#greeting}}{{a}} {{b}}{{c.d}}{{/gretting}}</h1>`
+func TestTemplateObjectBlock(t *testing.T) {
+	html := `<h1>{{#greeting}}{{a}} {{b}}{{c.d}}{{/gretting}}</h1>`
 	data := map[string]interface{}{
 		"greeting": map[string]interface{}{
 			"a": "Hello",
@@ -229,19 +229,19 @@ func TestRenderableObjectBlock(t *testing.T) {
 
 	var exp = `<h1>Hello World!</h1>`
 
-	rend := &Renderable{
-		File: bytes.NewReader([]byte(tmpl)),
+	tmpl := &Template{
+		File: bytes.NewReader([]byte(html)),
 		Data: &Data{Value: data},
 	}
 
 	Asser{t}.
-		Given(a(rend)).
+		Given(a(tmpl)).
 		Then(bodyEquals(exp)).
 		And(errorIs(nil))
 }
 
-func TestRenderableOutsideOfBlockVar(t *testing.T) {
-	tmpl := `<h1>{{#greeting}}{{a}} {{b}}{{c.d}}{{/greeting}}</h1>`
+func TestTemplateOutsideOfBlockVar(t *testing.T) {
+	html := `<h1>{{#greeting}}{{a}} {{b}}{{c.d}}{{/greeting}}</h1>`
 	data := map[string]interface{}{
 		"a": "Hello",
 		"greeting": map[string]interface{}{
@@ -254,19 +254,19 @@ func TestRenderableOutsideOfBlockVar(t *testing.T) {
 
 	var exp = `<h1>Hello World!</h1>`
 
-	rend := &Renderable{
-		File: bytes.NewReader([]byte(tmpl)),
+	tmpl := &Template{
+		File: bytes.NewReader([]byte(html)),
 		Data: &Data{Value: data},
 	}
 
 	Asser{t}.
-		Given(a(rend)).
+		Given(a(tmpl)).
 		Then(bodyEquals(exp)).
 		And(errorIs(nil))
 }
 
-func TestRenderableOutsideOfBlockVarUsesClosestVar(t *testing.T) {
-	tmpl := `<h1>{{#greeting}}{{a}} {{b}}{{c.d}}{{/greeting}}</h1>`
+func TestTemplateOutsideOfBlockVarUsesClosestVar(t *testing.T) {
+	html := `<h1>{{#greeting}}{{a}} {{b}}{{c.d}}{{/greeting}}</h1>`
 	data := map[string]interface{}{
 		"a": "Hello",
 		"greeting": map[string]interface{}{
@@ -280,85 +280,85 @@ func TestRenderableOutsideOfBlockVarUsesClosestVar(t *testing.T) {
 
 	var exp = `<h1>Hola World!</h1>`
 
-	rend := &Renderable{
-		File: bytes.NewReader([]byte(tmpl)),
+	tmpl := &Template{
+		File: bytes.NewReader([]byte(html)),
 		Data: &Data{Value: data},
 	}
 
 	Asser{t}.
-		Given(a(rend)).
+		Given(a(tmpl)).
 		Then(bodyEquals(exp)).
 		And(errorIs(nil))
 }
 
-func TestRenderableEscapesStrings(t *testing.T) {
-	tmpl := `<code>{{code}}</code>`
+func TestTemplateEscapesStrings(t *testing.T) {
+	html := `<code>{{code}}</code>`
 	data := map[string]interface{}{
 		"code": "<h1>Hello World!</h1>",
 	}
 
 	var exp = `<code>&lt;h1&gt;Hello World!&lt;/h1&gt;</code>`
 
-	rend := &Renderable{
-		File: bytes.NewReader([]byte(tmpl)),
+	tmpl := &Template{
+		File: bytes.NewReader([]byte(html)),
 		Data: &Data{Value: data},
 	}
 
 	Asser{t}.
-		Given(a(rend)).
+		Given(a(tmpl)).
 		Then(bodyEquals(exp)).
 		And(errorIs(nil))
 }
 
-func TestRenderableDontEscapesStrings(t *testing.T) {
-	tmpl := `<code>{{&code}}</code>`
+func TestTemplateDontEscapesStrings(t *testing.T) {
+	html := `<code>{{&code}}</code>`
 	data := map[string]interface{}{
 		"code": "<h1>Hello World!</h1>",
 	}
 
 	var exp = `<code><h1>Hello World!</h1></code>`
 
-	rend := &Renderable{
-		File: bytes.NewReader([]byte(tmpl)),
+	tmpl := &Template{
+		File: bytes.NewReader([]byte(html)),
 		Data: &Data{Value: data},
 	}
 
 	Asser{t}.
-		Given(a(rend)).
+		Given(a(tmpl)).
 		Then(bodyEquals(exp)).
 		And(errorIs(nil))
 }
 
-func TestRenderableNotEscapeDelimDoesNotAttemptToMatch(t *testing.T) {
-	tmpl := `<code>{{&code}}</code>`
+func TestTemplateNotEscapeDelimDoesNotAttemptToMatch(t *testing.T) {
+	html := `<code>{{&code}}</code>`
 	data := map[string]interface{}{
 		"code": "{{c}}",
 	}
 
 	var exp = `<code>{{c}}</code>`
 
-	rend := &Renderable{
-		File: bytes.NewReader([]byte(tmpl)),
+	tmpl := &Template{
+		File: bytes.NewReader([]byte(html)),
 		Data: &Data{Value: data},
 	}
 
 	Asser{t}.
-		Given(a(rend)).
+		Given(a(tmpl)).
 		Then(bodyEquals(exp)).
 		And(errorIs(nil))
 }
 
-func TestRenderableErrorsUnclosedBlock(t *testing.T) {
+func TestTemplateErrorsUnclosedBlock(t *testing.T) {
 	t.Skip()
 }
 
-var a = func(rend *Renderable) StepFunc {
+var a = func(tmpl *Template) StepFunc {
 	return func(t testing.TB, ctx Context) {
 		var buffer = make([]byte, 0, 32)
 		buf := bytes.NewBuffer(buffer)
-		n, err := io.Copy(buf, rend)
+		n, err := io.Copy(buf, tmpl)
 
-		ctx.Set("rend", rend)
+		ctx.Set("tmpl", tmpl)
 		ctx.Set("buf", buf)
 		ctx.Set("n", n)
 		ctx.Set("err", err)
