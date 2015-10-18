@@ -94,14 +94,16 @@ func getValue(k string, source interface{}) interface{} {
 	if !ok {
 		v = reflect.ValueOf(source)
 	}
+	if v.Kind() == reflect.Ptr {
+		v = v.Elem()
+	}
 
 	switch v.Kind() {
 	case reflect.Map:
 		v = v.MapIndex(reflect.ValueOf(tr))
 	case reflect.Struct:
 		v = v.FieldByName(tr)
-	case reflect.Ptr:
-		return getValue(k, v.Elem())
+
 	default:
 		return nil
 	}
