@@ -5,7 +5,7 @@ import (
 	"io"
 )
 
-// File is a simplifed interface of io.ReadSeeker
+// File is a simplifed interface of io.ReadSeeker with a Closer
 type File interface {
 	Read([]byte) (int, error)
 	Seek(int64, int) (int64, error)
@@ -15,6 +15,9 @@ type File interface {
 	Close() error
 }
 
+// PartialFunc represents the func signature used when requesting a partial to
+// be rendered. The interface{} to be returned must either assert to a File or
+// *Template.
 type PartialFunc func(string) (interface{}, error)
 
 type Template struct {
