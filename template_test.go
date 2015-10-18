@@ -458,6 +458,41 @@ func TestTemplateClosesPartials(t *testing.T) {
 	}
 }
 
+func TestTemplateVarsContainSpaces(t *testing.T) {
+	html := `<h1>{{a }}{{ > b }}{{ e}}</h1>`
+	data := map[string]interface{}{
+		"a": "Hello",
+		"d": "World",
+		"e": "!",
+	}
+
+	var exp = `<h1>Hello World!</h1>`
+
+	tmpl := &Template{
+		File: mFile{bytes.NewReader([]byte(html))},
+		Data: &Data{Value: data},
+	}
+	tmpl.Partial(func(path string) (interface{}, error) {
+		var p []byte
+		switch path {
+		case "b":
+			p = []byte(` {{> c}}`)
+		case "c":
+			p = []byte(`{{d}}`)
+
+		default:
+			t.Error("invalid partial %s", path)
+		}
+
+		return mFile{bytes.NewReader(p)}, nil
+	})
+
+	Asser{t}.
+		Given(a(tmpl)).
+		Then(bodyEquals(exp)).
+		And(errorIs(nil))
+}
+
 func TestTemplateErrorsUnclosedBlock(t *testing.T) {
 	t.Skip()
 }

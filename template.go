@@ -205,7 +205,7 @@ func (t *Template) swapDelim() {
 }
 
 func (t *Template) handleVar(v []byte) ([]byte, error) {
-	tag := string(bytes.TrimSpace(v))
+	tag := string(cleanSpaces(v))
 	if len(tag) == 0 {
 		// TODO handle if tag is empty
 	}
@@ -404,4 +404,25 @@ func (t *Template) flush(p []byte) (int, []byte) {
 // Partial sets the PartialFunc
 func (t *Template) Partial(fn PartialFunc) {
 	t.PartialFunc = fn
+}
+
+// cleanSpaces removes all spaces by shifting over the spaces allow us to return
+// a space clean version without allocating
+func cleanSpaces(b []byte) []byte {
+	lenb := len(b)
+
+	j := 0 // track i minus spaces
+	i := 0
+	for ; i < lenb; i++ {
+		c := b[i]
+		if c == ' ' {
+			continue
+		}
+
+		b[j] = c
+
+		j++
+	}
+
+	return b[:j]
 }
