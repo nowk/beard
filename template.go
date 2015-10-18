@@ -163,10 +163,9 @@ func (t *Template) Read(p []byte) (int, error) {
 
 		// if we are in a current block and there is no data to render dont
 		// render any of the inner block content
-		if _, bl := t.currentBlock(); bl != nil {
-			if !bl.IsValid() {
-				return writ, nil
-			}
+		_, bl := t.currentBlock()
+		if bl != nil && bl.Skip() {
+			return writ, nil
 		}
 
 		// combine truncated with current value and write
@@ -392,14 +391,12 @@ func (t *Template) getValue(k string) []byte {
 	z := len(t.blocks)
 	for ; z > 0; z-- {
 		bl := t.blocks[z-1]
-
-		if !bl.IsValid() {
+		if bl.Skip() {
 			return nil
 		}
 		if bl.Inverted() {
 			continue
 		}
-
 		if v := bl.Data().Get(k); v != nil {
 			return v.Bytes()
 		}
