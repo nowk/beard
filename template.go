@@ -200,7 +200,13 @@ func (t *Template) Read(p []byte) (int, error) {
 
 	n = writ
 	if t.eof && len(t.buf) == 0 && len(t.truncd) == 0 {
-		return n, io.EOF
+		// check for unclosed blocks
+		var err = io.EOF
+		if len(t.blocks) > 0 {
+			err = errUnclosedBlocks
+		}
+
+		return n, err
 	}
 
 	return n, nil
@@ -457,4 +463,7 @@ func cleanSpaces(b []byte) []byte {
 	return b[:j]
 }
 
-var errInvalidPartialFunc = errors.New("partial func is undefined")
+var (
+	errInvalidPartialFunc = errors.New("partial func is undefined")
+	errUnclosedBlocks     = errors.New("unclosed blocks")
+)

@@ -579,7 +579,24 @@ func TestTemplateInvertedBlockDoesNotTraverseUp(t *testing.T) {
 }
 
 func TestTemplateErrorsUnclosedBlock(t *testing.T) {
-	t.Skip()
+	html := `<h1>{{#words}}({{.}})</h1>`
+	data := map[string]interface{}{
+		"words": []string{
+			"a", "b", "c",
+		},
+	}
+
+	var exp = `<h1>(a)</h1>`
+
+	tmpl := &Template{
+		File: bytes.NewReader([]byte(html)),
+		Data: &Data{Value: data},
+	}
+
+	Asser{t}.
+		Given(a(tmpl)).
+		Then(bodyEquals(exp)).
+		And(errorIs(errUnclosedBlocks))
 }
 
 var a = func(tmpl *Template) StepFunc {
