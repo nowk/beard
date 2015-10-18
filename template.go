@@ -2,6 +2,7 @@ package beard
 
 import (
 	"bytes"
+	"errors"
 	"io"
 )
 
@@ -262,6 +263,10 @@ func (t *Template) handleVar(v []byte) ([]byte, error) {
 		esc = false
 
 	case '>':
+		if t.partialFunc == nil {
+			return nil, errInvalidPartialFunc
+		}
+
 		r, err := t.partialFunc(tag[1:])
 		if err != nil {
 			// TODO handle
@@ -436,3 +441,5 @@ func cleanSpaces(b []byte) []byte {
 
 	return b[:j]
 }
+
+var errInvalidPartialFunc = errors.New("partial func is undefined")

@@ -449,7 +449,24 @@ func TestTemplateClosesPartials(t *testing.T) {
 }
 
 func TestTemplatePartialFuncIsNil(t *testing.T) {
-	t.Skip()
+	html := `<h1>{{a}}{{>b}}{{e}}</h1>`
+	data := map[string]interface{}{
+		"a": "Hello",
+		"d": "World",
+		"e": "!",
+	}
+
+	var exp = `<h1>Hello`
+
+	tmpl := &Template{
+		File: bytes.NewReader([]byte(html)),
+		Data: &Data{Value: data},
+	}
+
+	Asser{t}.
+		Given(a(tmpl)).
+		Then(bodyEquals(exp)).
+		And(errorIs(errInvalidPartialFunc))
 }
 
 func TestTemplateVarsContainSpaces(t *testing.T) {
