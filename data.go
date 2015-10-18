@@ -15,10 +15,11 @@ type Data struct {
 }
 
 func (d *Data) Get(k string) *Data {
+	// dot notations just returns itself
 	if k == "." {
-		// dot notations just returns itself
 		return d
 	}
+
 	if v := getValue(k, d.Value); v != nil {
 		return &Data{
 			Value: v,
@@ -51,9 +52,9 @@ func (d *Data) ValueOf() *reflect.Value {
 }
 
 func (d *Data) Index(n int) *Data {
-	return &Data{
-		Value: d.ValueOf().Index(n).Interface(),
-	}
+	v := d.ValueOf().Index(n).Interface()
+
+	return &Data{Value: v}
 }
 
 func (d *Data) Bytes() []byte {
@@ -81,14 +82,14 @@ func (d *Data) Bytes() []byte {
 	return nil
 }
 
-// getValue finds the value of k within source.
-// This source can represent a tree like structure can must be traversed to find
-// the value of the full path of k. `k` can be a json path, eg. `foo.bar`
-func getValue(k string, source interface{}) interface{} {
-	tr, br := splitpath(k)
-	// TODO handle a is blank
-
-	var v reflect.Value
+// getValue finds the value of the path within source.
+// The path can be represented as a json path, eg a.b.c and will traverse the
+// source to find said path.
+func getValue(path string, source interface{}) interface{} {
+	tr, br := splitpath(path)
+	if tr == "" {
+		// TODO handle a is blank
+	}
 
 	v, ok := source.(reflect.Value)
 	if !ok {
@@ -111,16 +112,18 @@ func getValue(k string, source interface{}) interface{} {
 	if !v.IsValid() {
 		return nil
 	}
-	var i interface{} = v
+
+	var inf interface{} = v
 
 	if v.CanInterface() {
-		i = v.Interface()
-	}
-	if br != "" {
-		return getValue(br, i)
+		inf = v.Interface()
 	}
 
-	return i
+	if br != "" {
+		return getValue(br, inf)
+	}
+
+	return inf
 }
 
 const pathDelim = '.'
