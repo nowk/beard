@@ -374,10 +374,14 @@ func TestTemplatePartial(t *testing.T) {
 	}
 	tmpl.Partial(func(path string) (interface{}, error) {
 		var p []byte
-		if path == "b" {
+		switch path {
+		case "b":
 			p = []byte(` {{>c}}`)
-		} else {
+		case "c":
 			p = []byte(`{{d}}`)
+
+		default:
+			t.Errorf("invalid partial %s", path)
 		}
 
 		return mFile{bytes.NewReader(p)}, nil
@@ -423,10 +427,14 @@ func TestTemplateClosesPartials(t *testing.T) {
 	}
 	tmpl.Partial(func(path string) (interface{}, error) {
 		var p []byte
-		if path == "b" {
+		switch path {
+		case "b":
 			p = []byte(` {{>c}}`)
-		} else {
+		case "c":
 			p = []byte(`{{d}}`)
+
+		default:
+			t.Errorf("invalid partial %s", path)
 		}
 
 		return mFileCloser{

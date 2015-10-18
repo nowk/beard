@@ -235,6 +235,9 @@ func BenchmarkPartialInPartial(b *testing.B) {
 			p = []byte(` {{>d}}`)
 		case "d":
 			p = []byte(`{{e}}`)
+
+		default:
+			b.Fatalf("invalid partial %s", path)
 		}
 
 		return mFile{bytes.NewReader(p)}, nil
