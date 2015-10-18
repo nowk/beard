@@ -266,10 +266,10 @@ func BenchmarkPartialInPartial(b *testing.B) {
 	}
 }
 
-// BenchmarkBasicVar                 500000              2874 ns/op             192 B/op          9 allocs/op
-// BenchmarkArray                    300000              3982 ns/op             344 B/op         17 allocs/op
-// BenchmarkArrayInArray             200000             12022 ns/op            1016 B/op         47 allocs/op
-// BenchmarkBasicBlock               200000              8561 ns/op             864 B/op         40 allocs/op
-// BenchmarkBlockWithOutsideVar      200000              9058 ns/op             912 B/op         42 allocs/op
-// BenchmarkEscape                   200000              8741 ns/op             864 B/op         29 allocs/op
-// BenchmarkPartialInPartial         200000              9906 ns/op            1176 B/op         41 allocs/op
+// BenchmarkBasicVar                 500000              2543 ns/op             192 B/op          9 allocs/op
+// BenchmarkArray                    300000              4337 ns/op             344 B/op         17 allocs/op
+// BenchmarkArrayInArray             200000             10693 ns/op            1016 B/op         47 allocs/op
+// BenchmarkBasicBlock               200000              8294 ns/op             864 B/op         40 allocs/op
+// BenchmarkBlockWithOutsideVar      200000              9009 ns/op             912 B/op         42 allocs/op
+// BenchmarkEscape                   200000              8780 ns/op             864 B/op         29 allocs/op
+// BenchmarkPartialInPartial         200000              9853 ns/op            1176 B/op         41 allocs/op

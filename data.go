@@ -29,19 +29,28 @@ func (d *Data) Get(k string) *Data {
 	return nil
 }
 
+// Len returns the length of the data object. Any non nil object that is not a
+// slice will be returned with a value of 1
 func (d *Data) Len() int {
+	if d.Value == nil {
+		return 0
+	}
 	if d.IsSlice() {
 		return d.ValueOf().Len()
 	}
 
-	return 0
+	return 1
 }
 
 func (d *Data) IsSlice() bool {
-	return d.ValueOf().Kind() == reflect.Slice
+	return d.Value != nil &&
+		d.ValueOf().Kind() == reflect.Slice
 }
 
 func (d *Data) ValueOf() *reflect.Value {
+	if d.Value == nil {
+		return nil
+	}
 	if d.valueOf == nil {
 		v := reflect.ValueOf(d.Value)
 
@@ -52,6 +61,10 @@ func (d *Data) ValueOf() *reflect.Value {
 }
 
 func (d *Data) Index(n int) *Data {
+	if d.Len() == 0 {
+		return nil
+	}
+
 	v := d.ValueOf().Index(n).Interface()
 
 	return &Data{Value: v}

@@ -161,6 +161,14 @@ func (t *Template) Read(p []byte) (int, error) {
 			val = tag
 		}
 
+		// if we are in a current block and there is no data to render dont
+		// render any of the inner block content
+		if _, bl := t.currentBlock(); bl != nil {
+			if !bl.IsValid() {
+				return writ, nil
+			}
+		}
+
 		// combine truncated with current value and write
 		val = append(t.truncd, val...)
 		n := len(val)

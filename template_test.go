@@ -504,6 +504,34 @@ func TestTemplateVarsContainSpaces(t *testing.T) {
 		And(errorIs(nil))
 }
 
+func TestTemplateEmptyNilUnexistBlockData(t *testing.T) {
+	html := `<h1>{{#words}}({{.}}){{/words}}</h1>`
+
+	for _, v := range []interface{}{
+		map[string]interface{}{
+			"words": []interface{}{},
+		},
+		map[string]interface{}{
+			"words": nil,
+		},
+		map[string]interface{}{
+			"badwords": []string{"foo"},
+		},
+	} {
+		var exp = `<h1></h1>`
+
+		tmpl := &Template{
+			File: bytes.NewReader([]byte(html)),
+			Data: &Data{Value: v},
+		}
+
+		Asser{t}.
+			Given(a(tmpl)).
+			Then(bodyEquals(exp)).
+			And(errorIs(nil))
+	}
+}
+
 func TestTemplateErrorsUnclosedBlock(t *testing.T) {
 	t.Skip()
 }

@@ -17,12 +17,21 @@ func newBlock(tag string, c int, data *Data) *block {
 }
 
 func (b *block) Data() *Data {
+	if !b.IsValid() {
+		return nil
+	}
 	if b.data.IsSlice() {
 		// get data for current iteration context
 		return b.data.Index(b.iterd)
 	}
 
 	return b.data
+}
+
+// IsValid checks to see if a block is valid, thus renderable. A block's data
+// must not be nil and have a length > 0
+func (b *block) IsValid() bool {
+	return b.data != nil && b.data.Len() > 0
 }
 
 // Increment increments and returns the current iterd
@@ -38,5 +47,9 @@ func (b *block) Increment() int {
 // This assumes that increment has been explicitly called after each a block has
 // been read through.
 func (b *block) IsFinished() bool {
+	if !b.IsValid() {
+		return true
+	}
+
 	return !(b.iterd < b.data.Len())
 }
