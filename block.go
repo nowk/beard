@@ -44,18 +44,15 @@ func (b *block) Empty() bool {
 	return b.data == nil || b.data.Len() == 0
 }
 
-// Increment increments and returns the current iterd
-// All block types must explicitly call increment after they have been read
-// through.
+// Increment increments the iteration index. Non-slice types must call
+// Increment() after it's been rendered.
 func (b *block) Increment() int {
 	b.iterd++
 
 	return b.iterd
 }
 
-// IsFinished checks to see if the block has finished and should be exited
-// This assumes that increment has been explicitly called after each a block has
-// been read through.
+// IsFinished checks to see if a block has been completely iterated through.
 func (b *block) IsFinished() bool {
 	if b.Skip() {
 		return true
