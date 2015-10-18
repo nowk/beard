@@ -27,6 +27,7 @@ func BenchmarkBasicVar(b *testing.B) {
 
 		tmpl.File.Seek(0, 0)
 		tmpl.blocks = tmpl.blocks[:0]
+		tmpl.cursor = 0
 		buf.Reset()
 
 		b.StartTimer()
@@ -61,6 +62,7 @@ func BenchmarkArray(b *testing.B) {
 
 		tmpl.File.Seek(0, 0)
 		tmpl.blocks = tmpl.blocks[:0]
+		tmpl.cursor = 0
 		buf.Reset()
 
 		b.StartTimer()
@@ -95,6 +97,7 @@ func BenchmarkArrayInArray(b *testing.B) {
 
 		tmpl.File.Seek(0, 0)
 		tmpl.blocks = tmpl.blocks[:0]
+		tmpl.cursor = 0
 		buf.Reset()
 
 		b.StartTimer()
@@ -133,6 +136,7 @@ func BenchmarkBasicBlock(b *testing.B) {
 
 		tmpl.File.Seek(0, 0)
 		tmpl.blocks = tmpl.blocks[:0]
+		tmpl.cursor = 0
 		buf.Reset()
 
 		b.StartTimer()
@@ -171,6 +175,7 @@ func BenchmarkBlockWithOutsideVar(b *testing.B) {
 
 		tmpl.File.Seek(0, 0)
 		tmpl.blocks = tmpl.blocks[:0]
+		tmpl.cursor = 0
 		buf.Reset()
 
 		b.StartTimer()
@@ -203,6 +208,7 @@ func BenchmarkEscape(b *testing.B) {
 
 		tmpl.File.Seek(0, 0)
 		tmpl.blocks = tmpl.blocks[:0]
+		tmpl.cursor = 0
 		buf.Reset()
 
 		b.StartTimer()
@@ -255,6 +261,7 @@ func BenchmarkPartialInPartial(b *testing.B) {
 
 		tmpl.File.Seek(0, 0)
 		tmpl.blocks = tmpl.blocks[:0]
+		tmpl.cursor = 0
 		buf.Reset()
 
 		b.StartTimer()
@@ -266,10 +273,10 @@ func BenchmarkPartialInPartial(b *testing.B) {
 	}
 }
 
-// BenchmarkBasicVar                 500000              2543 ns/op             192 B/op          9 allocs/op
-// BenchmarkArray                    300000              4337 ns/op             344 B/op         17 allocs/op
-// BenchmarkArrayInArray             200000             10693 ns/op            1016 B/op         47 allocs/op
-// BenchmarkBasicBlock               200000              8294 ns/op             864 B/op         40 allocs/op
-// BenchmarkBlockWithOutsideVar      200000              9009 ns/op             912 B/op         42 allocs/op
-// BenchmarkEscape                   200000              8780 ns/op             864 B/op         29 allocs/op
-// BenchmarkPartialInPartial         200000              9853 ns/op            1176 B/op         41 allocs/op
+// BenchmarkBasicVar                 500000              2579 ns/op             192 B/op          9 allocs/op
+// BenchmarkArray                    200000              9138 ns/op             600 B/op         35 allocs/op
+// BenchmarkArrayInArray              10000            103828 ns/op            7817 B/op        434 allocs/op
+// BenchmarkBasicBlock               200000             11042 ns/op             864 B/op         40 allocs/op
+// BenchmarkBlockWithOutsideVar      200000              9416 ns/op             912 B/op         42 allocs/op
+// BenchmarkEscape                   200000              9318 ns/op             864 B/op         29 allocs/op
+// BenchmarkPartialInPartial         200000             11860 ns/op            1176 B/op         41 allocs/op
