@@ -6,16 +6,6 @@ import (
 	"testing"
 )
 
-// mFile is a simple struct to wrap a ReadSeaker to comply with the File
-// interface
-type mFile struct {
-	io.ReadSeeker
-}
-
-func (f mFile) Close() error {
-	return nil
-}
-
 func TestTemplateBufTruncdOut(t *testing.T) {
 	html := `<h1>Hello {{c}}</h1>`
 	data := map[string]interface{}{
@@ -23,7 +13,7 @@ func TestTemplateBufTruncdOut(t *testing.T) {
 	}
 
 	tmpl := &Template{
-		File: mFile{bytes.NewReader([]byte(html))},
+		File: bytes.NewReader([]byte(html)),
 		Data: &Data{Value: data},
 	}
 
@@ -90,7 +80,7 @@ func TestTemplateBasicVariables(t *testing.T) {
 	var exp = `<h1>Hello World!</h1>`
 
 	tmpl := &Template{
-		File: mFile{bytes.NewReader([]byte(html))},
+		File: bytes.NewReader([]byte(html)),
 		Data: &Data{Value: data},
 	}
 
@@ -111,7 +101,7 @@ func TestTemplateArrayBlock(t *testing.T) {
 	var exp = `(a)(a)(b)(b)(c)(c)`
 
 	tmpl := &Template{
-		File: mFile{bytes.NewReader([]byte(html))},
+		File: bytes.NewReader([]byte(html)),
 		Data: &Data{Value: data},
 	}
 
@@ -132,7 +122,7 @@ func TestTemplateSameArrayInArray(t *testing.T) {
 	var exp = `(a)(a)(b)(c)(b)(a)(b)(c)(c)(a)(b)(c)`
 
 	tmpl := &Template{
-		File: mFile{bytes.NewReader([]byte(html))},
+		File: bytes.NewReader([]byte(html)),
 		Data: &Data{Value: data},
 	}
 
@@ -155,7 +145,7 @@ func TestTemplateVarPath(t *testing.T) {
 	var exp = `<h1>Hello World!</h1>`
 
 	tmpl := &Template{
-		File: mFile{bytes.NewReader([]byte(html))},
+		File: bytes.NewReader([]byte(html)),
 		Data: &Data{Value: data},
 	}
 
@@ -190,7 +180,7 @@ func TestTemplateArrayOfObjects(t *testing.T) {
 	var exp = `(a)(a)(b)(b)(c)(c)`
 
 	tmpl := &Template{
-		File: mFile{bytes.NewReader([]byte(html))},
+		File: bytes.NewReader([]byte(html)),
 		Data: &Data{Value: data},
 	}
 
@@ -215,7 +205,7 @@ func TestTemplateArrayInPath(t *testing.T) {
 	var exp = `(a)(a)(b)(b)(c)(c)`
 
 	tmpl := &Template{
-		File: mFile{bytes.NewReader([]byte(html))},
+		File: bytes.NewReader([]byte(html)),
 		Data: &Data{Value: data},
 	}
 
@@ -240,7 +230,7 @@ func TestTemplateObjectBlock(t *testing.T) {
 	var exp = `<h1>Hello World!</h1>`
 
 	tmpl := &Template{
-		File: mFile{bytes.NewReader([]byte(html))},
+		File: bytes.NewReader([]byte(html)),
 		Data: &Data{Value: data},
 	}
 
@@ -265,7 +255,7 @@ func TestTemplateOutsideOfBlockVar(t *testing.T) {
 	var exp = `<h1>Hello World!</h1>`
 
 	tmpl := &Template{
-		File: mFile{bytes.NewReader([]byte(html))},
+		File: bytes.NewReader([]byte(html)),
 		Data: &Data{Value: data},
 	}
 
@@ -291,7 +281,7 @@ func TestTemplateOutsideOfBlockVarUsesClosestVar(t *testing.T) {
 	var exp = `<h1>Hola World!</h1>`
 
 	tmpl := &Template{
-		File: mFile{bytes.NewReader([]byte(html))},
+		File: bytes.NewReader([]byte(html)),
 		Data: &Data{Value: data},
 	}
 
@@ -310,7 +300,7 @@ func TestTemplateEscapesStrings(t *testing.T) {
 	var exp = `<code>&lt;h1&gt;Hello World!&lt;/h1&gt;</code>`
 
 	tmpl := &Template{
-		File: mFile{bytes.NewReader([]byte(html))},
+		File: bytes.NewReader([]byte(html)),
 		Data: &Data{Value: data},
 	}
 
@@ -329,7 +319,7 @@ func TestTemplateDontEscapesStrings(t *testing.T) {
 	var exp = `<code><h1>Hello World!</h1></code>`
 
 	tmpl := &Template{
-		File: mFile{bytes.NewReader([]byte(html))},
+		File: bytes.NewReader([]byte(html)),
 		Data: &Data{Value: data},
 	}
 
@@ -348,7 +338,7 @@ func TestTemplateNotEscapeDelimDoesNotAttemptToMatch(t *testing.T) {
 	var exp = `<code>{{c}}</code>`
 
 	tmpl := &Template{
-		File: mFile{bytes.NewReader([]byte(html))},
+		File: bytes.NewReader([]byte(html)),
 		Data: &Data{Value: data},
 	}
 
@@ -369,10 +359,10 @@ func TestTemplatePartial(t *testing.T) {
 	var exp = `<h1>Hello World!</h1>`
 
 	tmpl := &Template{
-		File: mFile{bytes.NewReader([]byte(html))},
+		File: bytes.NewReader([]byte(html)),
 		Data: &Data{Value: data},
 	}
-	tmpl.Partial(func(path string) (interface{}, error) {
+	tmpl.Partial(func(path string) (io.Reader, error) {
 		var p []byte
 		switch path {
 		case "b":
@@ -384,7 +374,7 @@ func TestTemplatePartial(t *testing.T) {
 			t.Errorf("invalid partial %s", path)
 		}
 
-		return mFile{bytes.NewReader(p)}, nil
+		return bytes.NewReader(p), nil
 	})
 
 	Asser{t}.
@@ -422,10 +412,10 @@ func TestTemplateClosesPartials(t *testing.T) {
 	var closed = 0
 
 	tmpl := &Template{
-		File: mFile{bytes.NewReader([]byte(html))},
+		File: bytes.NewReader([]byte(html)),
 		Data: &Data{Value: data},
 	}
-	tmpl.Partial(func(path string) (interface{}, error) {
+	tmpl.Partial(func(path string) (io.Reader, error) {
 		var p []byte
 		switch path {
 		case "b":
@@ -458,6 +448,10 @@ func TestTemplateClosesPartials(t *testing.T) {
 	}
 }
 
+func TestTemplatePartialFuncIsNil(t *testing.T) {
+	t.Skip()
+}
+
 func TestTemplateVarsContainSpaces(t *testing.T) {
 	html := `<h1>{{a }}{{ > b }}{{ e}}</h1>`
 	data := map[string]interface{}{
@@ -469,10 +463,10 @@ func TestTemplateVarsContainSpaces(t *testing.T) {
 	var exp = `<h1>Hello World!</h1>`
 
 	tmpl := &Template{
-		File: mFile{bytes.NewReader([]byte(html))},
+		File: bytes.NewReader([]byte(html)),
 		Data: &Data{Value: data},
 	}
-	tmpl.Partial(func(path string) (interface{}, error) {
+	tmpl.Partial(func(path string) (io.Reader, error) {
 		var p []byte
 		switch path {
 		case "b":
@@ -484,7 +478,7 @@ func TestTemplateVarsContainSpaces(t *testing.T) {
 			t.Error("invalid partial %s", path)
 		}
 
-		return mFile{bytes.NewReader(p)}, nil
+		return bytes.NewReader(p), nil
 	})
 
 	Asser{t}.

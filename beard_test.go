@@ -2,24 +2,33 @@ package beard
 
 import (
 	"bytes"
+	"io"
 	"testing"
 )
 
 func TestRenderInLayout(t *testing.T) {
 	layo := `<body>{{>yield}}</body>`
-	html := `<h1>{{a}} {{b}}{{c}}</h1>`
+	html := `<h1>{{a}} {{>b}}{{d}}</h1>`
 	data := map[string]interface{}{
 		"a": "Hello",
-		"b": "World",
-		"c": "!",
+		"c": "World",
+		"d": "!",
 	}
 
 	var exp = `<body><h1>Hello World!</h1></body>`
 
 	tmpl := RenderInLayout(
-		mFile{bytes.NewReader([]byte(layo))},
-		mFile{bytes.NewReader([]byte(html))},
+		bytes.NewReader([]byte(layo)),
+		bytes.NewReader([]byte(html)),
 		data,
+		func(path string) (io.Reader, error) {
+			if path == "b" {
+				return bytes.NewReader([]byte(`{{c}}`)), nil
+			}
+
+			t.Errorf("invalid path %s", path)
+			return nil, nil
+		},
 	).(*Template)
 
 	Asser{t}.

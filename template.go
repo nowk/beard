@@ -5,20 +5,16 @@ import (
 	"io"
 )
 
-// File is a simplifed interface of io.ReadSeeker with a Closer
+// File is a simplifed interface of io.ReadSeeker
 type File interface {
 	Read([]byte) (int, error)
 	Seek(int64, int) (int64, error)
-
-	// Close is only called on partials. Main template files must be explicitly
-	// closed by the user
-	Close() error
 }
 
 // PartialFunc represents the func signature used when requesting a partial to
 // be rendered. The interface{} to be returned must either assert to a File or
 // *Template.
-type PartialFunc func(string) (interface{}, error)
+type PartialFunc func(string) (io.Reader, error)
 
 type Template struct {
 	// File is the template file to be rendered. File must be explicitly closed
@@ -27,11 +23,6 @@ type Template struct {
 
 	// Data is the data set to be used when compiling variables into the html
 	Data *Data
-
-	// PartialFunc is a user defined function to return the File to be rendered
-	// as a partial. This function is inherited by inner partials, unless
-	// already predefined (eg. layouts)
-	PartialFunc PartialFunc
 
 	// del represents the current delimiter
 	del Delim
@@ -53,9 +44,14 @@ type Template struct {
 	// current block
 	blocks []*block
 
-	// partial is set when rendering a partial and unset when finished. Only one
-	// partial can be rendered at any given time for a single template
-	partial *Template
+	// partialFunc is a user definable func to handle how partials should be
+	// handled. Partials will inherit this function, unless the PartialFunc
+	// returns a *Template
+	partialFunc PartialFunc
+
+	// partial holds the reference to the current partial requiring rendering.
+	// This will be nil'd when the partial has been completely rendered.
+	partial io.Reader
 }
 
 var _ io.Reader = &Template{}
@@ -70,11 +66,26 @@ func (t *Template) Read(p []byte) (int, error) {
 			return n, nil
 		}
 		if err != io.EOF {
+			// TODO close on err
 			return n, err
 		}
 
-		// we are in charge of explicitly closing partial files
-		t.partial.File.Close()
+		// we are in charge of explicitly closing, if we get a closer
+		var cl io.ReadCloser
+
+		switch v := t.partial.(type) {
+		case *Template:
+			f, ok := v.File.(io.ReadCloser)
+			if ok {
+				cl = f
+			}
+		case io.ReadCloser:
+			cl = v
+		}
+		if cl != nil {
+			cl.Close()
+		}
+
 		t.partial = nil
 
 		writ = n
@@ -251,27 +262,26 @@ func (t *Template) handleVar(v []byte) ([]byte, error) {
 		esc = false
 
 	case '>':
-		inf, err := t.PartialFunc(tag[1:])
+		r, err := t.partialFunc(tag[1:])
 		if err != nil {
 			// TODO handle
 		}
-
-		switch v := inf.(type) {
-		case File:
-			t.partial = &Template{
-				File: v,
-				Data: t.Data,
-			}
-		case *Template:
-			t.partial = v
-		default:
+		if r == nil {
 			// TODO handle
 		}
 
-		// inherit PartialFunc, if applicable
-		if t.partial.PartialFunc == nil {
-			t.partial.PartialFunc = t.PartialFunc
+		// if we get a File, make it a template
+		if f, ok := r.(File); ok {
+			te := &Template{
+				File: f,
+				Data: t.Data,
+			}
+			te.Partial(t.partialFunc)
+
+			r = te
 		}
+
+		t.partial = r
 
 		return nil, nil
 	}
@@ -401,9 +411,9 @@ func (t *Template) flush(p []byte) (int, []byte) {
 	return i, t.truncd[i:]
 }
 
-// Partial sets the PartialFunc
+// Partial sets the partialFunc
 func (t *Template) Partial(fn PartialFunc) {
-	t.PartialFunc = fn
+	t.partialFunc = fn
 }
 
 // cleanSpaces removes all spaces by shifting over the spaces allow us to return

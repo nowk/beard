@@ -4,18 +4,12 @@ import (
 	"io"
 )
 
-// Render provides s a convenience func to create
-func Render(
-	fi File, d map[string]interface{}, opts ...func(*Template)) io.Reader {
-
+func Render(fi File, d map[string]interface{}, fn PartialFunc) io.Reader {
 	te := &Template{
 		File: fi,
 		Data: &Data{Value: d},
 	}
-
-	for _, v := range opts {
-		v(te)
-	}
+	te.Partial(fn)
 
 	return te
 }
@@ -24,22 +18,23 @@ func Render(
 // handled by way of a partial, the partial syntax uses the keyword yield
 // eg. {{>yield}}
 func RenderInLayout(
-	la, fi File, d map[string]interface{}, opts ...func(*Template)) io.Reader {
+	la, fi File, d map[string]interface{}, fn PartialFunc) io.Reader {
 
-	te := Render(fi, d, opts...).(*Template)
+	te := Render(fi, d, fn).(*Template)
 
-	return &Template{
+	layo := &Template{
 		File: la,
 		Data: te.Data,
-
-		PartialFunc: layoutFunc(te),
 	}
+	layo.Partial(yieldFunc(te))
+
+	return layo
 }
 
-var layoutFunc = func(v interface{}) PartialFunc {
-	return func(path string) (interface{}, error) {
+func yieldFunc(r io.Reader) PartialFunc {
+	return func(path string) (io.Reader, error) {
 		if path == "yield" {
-			return v, nil
+			return r, nil
 		}
 
 		// TODO should we error here?

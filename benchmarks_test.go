@@ -13,7 +13,7 @@ func BenchmarkBasicVar(b *testing.B) {
 	}
 
 	tmpl := &Template{
-		File: mFile{bytes.NewReader([]byte(html))},
+		File: bytes.NewReader([]byte(html)),
 		Data: &Data{Value: data},
 	}
 
@@ -47,7 +47,7 @@ func BenchmarkArray(b *testing.B) {
 	}
 
 	tmpl := &Template{
-		File: mFile{bytes.NewReader([]byte(html))},
+		File: bytes.NewReader([]byte(html)),
 		Data: &Data{Value: data},
 	}
 
@@ -81,7 +81,7 @@ func BenchmarkArrayInArray(b *testing.B) {
 	}
 
 	tmpl := &Template{
-		File: mFile{bytes.NewReader([]byte(html))},
+		File: bytes.NewReader([]byte(html)),
 		Data: &Data{Value: data},
 	}
 
@@ -119,7 +119,7 @@ func BenchmarkBasicBlock(b *testing.B) {
 	}
 
 	tmpl := &Template{
-		File: mFile{bytes.NewReader([]byte(html))},
+		File: bytes.NewReader([]byte(html)),
 		Data: &Data{Value: data},
 	}
 
@@ -157,7 +157,7 @@ func BenchmarkBlockWithOutsideVar(b *testing.B) {
 	}
 
 	tmpl := &Template{
-		File: mFile{bytes.NewReader([]byte(html))},
+		File: bytes.NewReader([]byte(html)),
 		Data: &Data{Value: data},
 	}
 
@@ -189,7 +189,7 @@ func BenchmarkEscape(b *testing.B) {
 	}
 
 	tmpl := &Template{
-		File: mFile{bytes.NewReader([]byte(html))},
+		File: bytes.NewReader([]byte(html)),
 		Data: &Data{Value: data},
 	}
 
@@ -214,6 +214,8 @@ func BenchmarkEscape(b *testing.B) {
 	}
 }
 
+// NOTE this does not take into account file lookups or things of that nature
+// those will vary based on your usage.
 func BenchmarkPartialInPartial(b *testing.B) {
 	html := `{{>a}}{{>c}}{{f}}`
 	data := map[string]interface{}{
@@ -223,10 +225,10 @@ func BenchmarkPartialInPartial(b *testing.B) {
 	}
 
 	tmpl := &Template{
-		File: mFile{bytes.NewReader([]byte(html))},
+		File: bytes.NewReader([]byte(html)),
 		Data: &Data{Value: data},
 	}
-	tmpl.Partial(func(path string) (interface{}, error) {
+	tmpl.Partial(func(path string) (io.Reader, error) {
 		var p []byte
 		switch path {
 		case "a":
@@ -240,7 +242,7 @@ func BenchmarkPartialInPartial(b *testing.B) {
 			b.Fatalf("invalid partial %s", path)
 		}
 
-		return mFile{bytes.NewReader(p)}, nil
+		return bytes.NewReader(p), nil
 	})
 
 	buf := bytes.NewBuffer(nil)
@@ -264,10 +266,10 @@ func BenchmarkPartialInPartial(b *testing.B) {
 	}
 }
 
-// BenchmarkBasicVar                 500000              2721 ns/op             192 B/op          9 allocs/op
-// BenchmarkArray                    300000              4009 ns/op             344 B/op         17 allocs/op
-// BenchmarkArrayInArray             200000             11771 ns/op            1016 B/op         47 allocs/op
-// BenchmarkBasicBlock               200000              8382 ns/op             864 B/op         40 allocs/op
-// BenchmarkBlockWithOutsideVar      200000              8968 ns/op             912 B/op         42 allocs/op
-// BenchmarkEscape                   200000              8788 ns/op             864 B/op         29 allocs/op
-// BenchmarkPartialInPartial         200000             11658 ns/op            1176 B/op         44 allocs/op <- extra 3 allocs seem to be coming from mFile{}
+// BenchmarkBasicVar                 500000              2874 ns/op             192 B/op          9 allocs/op
+// BenchmarkArray                    300000              3982 ns/op             344 B/op         17 allocs/op
+// BenchmarkArrayInArray             200000             12022 ns/op            1016 B/op         47 allocs/op
+// BenchmarkBasicBlock               200000              8561 ns/op             864 B/op         40 allocs/op
+// BenchmarkBlockWithOutsideVar      200000              9058 ns/op             912 B/op         42 allocs/op
+// BenchmarkEscape                   200000              8741 ns/op             864 B/op         29 allocs/op
+// BenchmarkPartialInPartial         200000              9906 ns/op            1176 B/op         41 allocs/op
