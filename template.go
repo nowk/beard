@@ -233,7 +233,7 @@ func (t *Template) handleVar(v []byte) ([]byte, error) {
 	esc := true
 
 	switch tag[0] {
-	case '#':
+	case '#', '^':
 		bl := t.newBlock(tag, t.cursor)
 		// bl := t.newBlock(tag, t.cursor-(len(v)+len(rdelim)+len(ldelim)))
 		if bl == nil {
@@ -386,6 +386,13 @@ func (t *Template) getValue(k string) []byte {
 	z := len(t.blocks)
 	for ; z > 0; z-- {
 		bl := t.blocks[z-1]
+
+		if !bl.IsValid() {
+			return nil
+		}
+		if bl.Inverted() {
+			continue
+		}
 
 		if v := bl.Data().Get(k); v != nil {
 			return v.Bytes()

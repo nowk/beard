@@ -532,6 +532,52 @@ func TestTemplateEmptyNilUnexistBlockData(t *testing.T) {
 	}
 }
 
+func TestTemplateInvertedBlock(t *testing.T) {
+	html := `<h1>{{#words}}({{.}}){{/words}}{{^words}}Hola Mundo!{{/words}}</h1>`
+
+	for _, v := range []struct {
+		data map[string]interface{}
+		exp  string
+	}{
+		{map[string]interface{}{"words": []string{"a", "b", "c"}}, `<h1>(a)(b)(c)</h1>`},
+		{map[string]interface{}{}, `<h1>Hola Mundo!</h1>`},
+	} {
+		tmpl := &Template{
+			File: bytes.NewReader([]byte(html)),
+			Data: &Data{Value: v.data},
+		}
+
+		Asser{t}.
+			Given(a(tmpl)).
+			Then(bodyEquals(v.exp)).
+			And(errorIs(nil))
+	}
+}
+
+func TestTemplateInvertedBlockDoesNotTraverseUp(t *testing.T) {
+	html := `<h1>{{#many.words}}({{.}}){{/many.words}}{{^many.words}}Hola Mundo!{{/many.words}}</h1>`
+	data := map[string]interface{}{
+		"words": []string{
+			"a", "b", "c",
+		},
+		"many": map[string]interface{}{
+			"words": []string{},
+		},
+	}
+
+	var exp = `<h1>Hola Mundo!</h1>`
+
+	tmpl := &Template{
+		File: bytes.NewReader([]byte(html)),
+		Data: &Data{Value: data},
+	}
+
+	Asser{t}.
+		Given(a(tmpl)).
+		Then(bodyEquals(exp)).
+		And(errorIs(nil))
+}
+
 func TestTemplateErrorsUnclosedBlock(t *testing.T) {
 	t.Skip()
 }

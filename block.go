@@ -31,6 +31,10 @@ func (b *block) Data() *Data {
 // IsValid checks to see if a block is valid, thus renderable. A block's data
 // must not be nil and have a length > 0
 func (b *block) IsValid() bool {
+	if b.Inverted() {
+		return b.data == nil || b.data.Len() == 0
+	}
+
 	return b.data != nil && b.data.Len() > 0
 }
 
@@ -50,6 +54,13 @@ func (b *block) IsFinished() bool {
 	if !b.IsValid() {
 		return true
 	}
+	if b.data == nil {
+		return true
+	}
 
 	return !(b.iterd < b.data.Len())
+}
+
+func (b *block) Inverted() bool {
+	return b.tag != "" && b.tag[0] == '^'
 }
