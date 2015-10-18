@@ -27,13 +27,12 @@ func escapeBytes(b []byte) []byte {
 
 		// we'll normally get a default cap of 8, lets use as much of that
 		// if we can before we make another allocation
-		if cap(b) < lenb+lenesc {
-			capb := cap(b)
+		if capb := cap(b); capb < lenb+lenesc {
 			c := capb * 2
 
 			// check to see if the 2x cap is greater than the cap plus 2x the
 			// longest escape, most escapes will come in pairs
-			if min := 2*6 + cap(b); c < min {
+			if min := 2*6 + capb; c < min {
 				c = min
 			}
 
