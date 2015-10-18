@@ -19,7 +19,6 @@ func (d *Data) Get(k string) *Data {
 	if k == "." {
 		return d
 	}
-
 	if v := getValue(k, d.Value); v != nil {
 		return &Data{
 			Value: v,
@@ -43,8 +42,11 @@ func (d *Data) Len() int {
 }
 
 func (d *Data) IsSlice() bool {
-	return d.Value != nil &&
-		d.ValueOf().Kind() == reflect.Slice
+	if d.Value == nil {
+		return false
+	}
+
+	return d.ValueOf().Kind() == reflect.Slice
 }
 
 func (d *Data) ValueOf() *reflect.Value {
