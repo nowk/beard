@@ -11,9 +11,7 @@ type File interface {
 	io.ReadSeeker
 }
 
-// PartialFunc represents the func signature used when requesting a partial to
-// be rendered. The interface{} to be returned must either assert to a File or
-// *Template.
+// PartialFunc represents the func signature to retrieve a partial's source
 type PartialFunc func(string) (io.Reader, error)
 
 type Template struct {
@@ -21,7 +19,8 @@ type Template struct {
 	// by the user
 	File File
 
-	// Data is the data set to be used when compiling variables into the html
+	// Data is the data set to be used when rendering variables into the
+	// template
 	Data *Data
 
 	// del represents the current delimiter
@@ -37,20 +36,19 @@ type Template struct {
 	// eof marks the File has reached EOF.
 	eof bool
 
-	// cursor is the location at which the reader is at
+	// cursor is the location at which the reader is at in relation to what was
+	// read from File
 	cursor int
 
-	// blocks are added in a FILO order. The last block in the list would be the
-	// current block
+	// blocks holde block contexts. Blocks are added and removed in FILO format.
+	// The last block is generally understood to be the current context.
 	blocks []*block
 
-	// partialFunc is a user definable func to handle how partials should be
-	// handled. Partials will inherit this function, unless the PartialFunc
-	// returns a *Template
+	// partialFunc is a user definable func to return the partial source
 	partialFunc PartialFunc
 
-	// partial holds the reference to the current partial requiring rendering.
-	// This will be nil'd when the partial has been completely rendered.
+	// partial holds the reference to the current partial. This will be nil'd
+	// when the partial has been completely rendered.
 	partial io.Reader
 }
 
@@ -99,8 +97,7 @@ func (t *Template) Read(p []byte) (int, error) {
 		}
 	}
 
-	// alloc buf with a cap of n
-	// we do need a separate allocated block here.
+	// alloc buf with a cap of n. We need a separate allocated block here.
 	if t.buf == nil {
 		t.buf = make([]byte, 0, n)
 	}
@@ -148,11 +145,11 @@ func (t *Template) Read(p []byte) (int, error) {
 
 		// combine truncated with current value and write
 		val = append(t.truncd, val...)
-		n := len(val)
 
 		// amount to be written must fit in with in the available space that has
 		// yet to be written on p. If we have more to write, truncate for next
 		// Read
+		n := len(val)
 		if availn := lenp - writ; n > availn {
 			n = availn
 			t.truncd = val[n:]
@@ -214,7 +211,7 @@ func (t *Template) readPartial(p []byte) (int, error) {
 		return n, nil
 	}
 
-	// we are in charge of explicitly closing, if we get a closer
+	// we are in charge of explicitly closing partial source, if we get a closer
 	defer closePartial(t.partial)
 
 	if err != io.EOF {
@@ -353,7 +350,7 @@ func (t *Template) newBlock(tag string, c int) *block {
 	return bl
 }
 
-// findBlock finds a block by it's name and cursot.
+// findBlock finds a block by it's name (tag) and cursot.
 // The addition of the cursor provides a method of assigning uniqueness to a
 // block, allowing blocks to nest the same block and have a fresh reference to
 // the underlying data.
@@ -412,6 +409,7 @@ func (t *Template) newPartial(path string) (io.Reader, error) {
 	if r == nil {
 		return nil, nil
 	}
+
 	// if we get a File, make it a template
 	if f, ok := r.(File); ok {
 		te := &Template{
