@@ -394,9 +394,6 @@ func (t *Template) popBlock() *block {
 	if i < 0 {
 		return nil
 	}
-	if bl == nil {
-		return nil
-	}
 
 	t.blocks = t.blocks[:i]
 
