@@ -61,6 +61,7 @@ func (t *Template) Read(p []byte) (int, error) {
 	lenp := len(p)
 	writ := 0
 
+	// read partial out to write
 	if t.partial != nil {
 		n, err := t.readPartial(p)
 		if err == nil {
