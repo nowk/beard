@@ -197,25 +197,12 @@ func (t *Template) readPartial(p []byte) (int, error) {
 	if err == nil {
 		return n, nil
 	}
-	if err != io.EOF {
-		// TODO close on err
-		return n, err
-	}
 
 	// we are in charge of explicitly closing, if we get a closer
-	var cl io.ReadCloser
+	defer closePartial(t.partial)
 
-	switch v := t.partial.(type) {
-	case *Template:
-		f, ok := v.File.(io.ReadCloser)
-		if ok {
-			cl = f
-		}
-	case io.ReadCloser:
-		cl = v
-	}
-	if cl != nil {
-		cl.Close()
+	if err != io.EOF {
+		return n, err
 	}
 
 	t.partial = nil
@@ -478,6 +465,26 @@ func cleanSpaces(b []byte) []byte {
 	}
 
 	return b[:j]
+}
+
+func closePartial(par interface{}) {
+	var c io.ReadCloser
+
+	switch v := par.(type) {
+	case *Template:
+		f, ok := v.File.(io.ReadCloser)
+		if ok {
+			c = f
+		}
+	case io.ReadCloser:
+		c = v
+	}
+
+	if c == nil {
+		return
+	}
+
+	c.Close()
 }
 
 var (
