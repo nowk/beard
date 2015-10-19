@@ -107,9 +107,6 @@ func (t *Template) Read(p []byte) (int, error) {
 	}
 	t.buf = append(t.buf, p[writ:writ+n]...)
 
-	// trim p, so we can start from it's last written point
-	p = p[:writ]
-
 	switch b, ma := t.delim().Match(t.buf); ma {
 	case paMatch:
 		t.buf = b
@@ -164,15 +161,29 @@ func (t *Template) Read(p []byte) (int, error) {
 			t.truncd = t.truncd[:0]
 		}
 
-		p = append(p, val[:n]...)
-		writ += n
+		// p = append(p[:writ], val[:n]...)
+		j := 0
+		i := writ
+		m := writ + n
+		for ; i < m; i++ {
+			p[i] = val[j]
+			j++
+		}
+		writ += j
 
 	default:
 		// if we have a buf, flush it. NOTE: buf at this point will always fit
 		// into p
 		if n := len(t.buf); n > 0 {
-			p = append(p, t.buf[:n]...)
-			writ += n
+			// p = append(p[:writ], t.buf[:n]...)
+			j := 0
+			i := writ
+			m := writ + n
+			for ; i < m; i++ {
+				p[i] = t.buf[j]
+				j++
+			}
+			writ += j
 
 			t.buf = t.buf[:0]
 			t.cursor += writ
