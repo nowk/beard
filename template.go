@@ -108,7 +108,7 @@ func (t *Template) Read(p []byte) (int, error) {
 
 	switch b, ma := t.delim().Match(t.buf); ma {
 	case paMatch:
-		t.buf = b
+		// NOTE: b is t.buf when partial match
 
 	case exMatch:
 		var (
