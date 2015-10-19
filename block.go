@@ -52,8 +52,8 @@ func (b *block) Increment() int {
 	return b.iterd
 }
 
-// IsFinished checks to see if a block has been completely iterated through.
-func (b *block) IsFinished() bool {
+// Finished checks to see if a block has been completely iterated through.
+func (b *block) Finished() bool {
 	if b.Skip() {
 		return true
 	}

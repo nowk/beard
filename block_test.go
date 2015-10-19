@@ -9,14 +9,14 @@ func Test_blockisFinished(t *testing.T) {
 		"a", "b",
 	}})
 
-	if bl.IsFinished() {
+	if bl.Finished() {
 		t.Errorf("expected block to not be finished")
 	}
 
 	bl.Increment()
 	bl.Increment()
 
-	if !bl.IsFinished() {
+	if !bl.Finished() {
 		t.Errorf("expected block to be finished")
 	}
 }
