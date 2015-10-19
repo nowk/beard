@@ -192,6 +192,11 @@ func (t *Template) Read(p []byte) (int, error) {
 	return n, nil
 }
 
+// Partial sets the partialFunc
+func (t *Template) Partial(fn PartialFunc) {
+	t.partialFunc = fn
+}
+
 func (t *Template) readPartial(p []byte) (int, error) {
 	n, err := t.partial.Read(p)
 	if err == nil {
@@ -209,6 +214,27 @@ func (t *Template) readPartial(p []byte) (int, error) {
 
 	return n, io.EOF
 
+}
+
+// flush writes truncated out to p. It writes up to the lesser of the two
+// lengths, p vs truncd. It returns any remaing bytes that couldn't be written
+// due to length constraints.
+func (t *Template) flush(p []byte) (int, []byte) {
+	lent := len(t.truncd)
+	z := len(p)
+	if lent < z {
+		z = lent
+	}
+
+	i := 0
+	for ; i < z; i++ {
+		p[i] = t.truncd[i]
+	}
+	if i >= lent {
+		return i, t.truncd[:0]
+	}
+
+	return i, t.truncd[i:]
 }
 
 // delim returns the "current" delim in the Template, it defaults to ldelim.
@@ -418,32 +444,6 @@ func (t *Template) getValue(k string) []byte {
 	}
 
 	return nil
-}
-
-// flush writes truncated out to p. It writes up to the lesser of the two
-// lengths, p vs truncd. It returns any remaing bytes that couldn't be written
-// due to length constraints.
-func (t *Template) flush(p []byte) (int, []byte) {
-	lent := len(t.truncd)
-	z := len(p)
-	if lent < z {
-		z = lent
-	}
-
-	i := 0
-	for ; i < z; i++ {
-		p[i] = t.truncd[i]
-	}
-	if i >= lent {
-		return i, t.truncd[:0]
-	}
-
-	return i, t.truncd[i:]
-}
-
-// Partial sets the partialFunc
-func (t *Template) Partial(fn PartialFunc) {
-	t.partialFunc = fn
 }
 
 // cleanSpaces removes all spaces by shifting over the spaces allow us to return
