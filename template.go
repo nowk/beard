@@ -62,32 +62,13 @@ func (t *Template) Read(p []byte) (int, error) {
 	writ := 0
 
 	if t.partial != nil {
-		n, err := t.partial.Read(p)
+		n, err := t.readPartial(p)
 		if err == nil {
 			return n, nil
 		}
 		if err != io.EOF {
-			// TODO close on err
 			return n, err
 		}
-
-		// we are in charge of explicitly closing, if we get a closer
-		var cl io.ReadCloser
-
-		switch v := t.partial.(type) {
-		case *Template:
-			f, ok := v.File.(io.ReadCloser)
-			if ok {
-				cl = f
-			}
-		case io.ReadCloser:
-			cl = v
-		}
-		if cl != nil {
-			cl.Close()
-		}
-
-		t.partial = nil
 
 		writ = n
 	}
@@ -211,6 +192,38 @@ func (t *Template) Read(p []byte) (int, error) {
 	return n, nil
 }
 
+func (t *Template) readPartial(p []byte) (int, error) {
+	n, err := t.partial.Read(p)
+	if err == nil {
+		return n, nil
+	}
+	if err != io.EOF {
+		// TODO close on err
+		return n, err
+	}
+
+	// we are in charge of explicitly closing, if we get a closer
+	var cl io.ReadCloser
+
+	switch v := t.partial.(type) {
+	case *Template:
+		f, ok := v.File.(io.ReadCloser)
+		if ok {
+			cl = f
+		}
+	case io.ReadCloser:
+		cl = v
+	}
+	if cl != nil {
+		cl.Close()
+	}
+
+	t.partial = nil
+
+	return n, io.EOF
+
+}
+
 // delim returns the "current" delim in the Template, it defaults to ldelim.
 func (t *Template) delim() Delim {
 	if t.del == nil {
@@ -276,29 +289,10 @@ func (t *Template) handleVar(v []byte) ([]byte, error) {
 		esc = false
 
 	case '>':
-		if t.partialFunc == nil {
-			return nil, errInvalidPartialFunc
-		}
-
-		r, err := t.partialFunc(tag[1:])
+		r, err := t.newPartial(tag[1:])
 		if err != nil {
-			// TODO handle
+			return nil, err
 		}
-		if r == nil {
-			// TODO handle
-		}
-
-		// if we get a File, make it a template
-		if f, ok := r.(File); ok {
-			te := &Template{
-				File: f,
-				Data: t.Data,
-			}
-			te.Partial(t.partialFunc)
-
-			r = te
-		}
-
 		t.partial = r
 
 		return nil, nil
@@ -383,6 +377,32 @@ func (t *Template) popBlock() *block {
 	t.blocks = t.blocks[:i]
 
 	return bl
+}
+
+func (t *Template) newPartial(path string) (io.Reader, error) {
+	if t.partialFunc == nil {
+		return nil, errInvalidPartialFunc
+	}
+
+	r, err := t.partialFunc(path)
+	if err != nil {
+		return nil, err
+	}
+	if r == nil {
+		return nil, nil
+	}
+	// if we get a File, make it a template
+	if f, ok := r.(File); ok {
+		te := &Template{
+			File: f,
+			Data: t.Data,
+		}
+		te.Partial(t.partialFunc)
+
+		r = te
+	}
+
+	return r, nil
 }
 
 // getValue looks up the value within Data map. It will iterrate *up* the blocks
