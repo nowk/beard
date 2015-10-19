@@ -6,10 +6,9 @@ import (
 	"io"
 )
 
-// File is a simplifed interface of io.ReadSeeker
+// File is a ReadSeeker
 type File interface {
-	Read([]byte) (int, error)
-	Seek(int64, int) (int64, error)
+	io.ReadSeeker
 }
 
 // PartialFunc represents the func signature used when requesting a partial to
