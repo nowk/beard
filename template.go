@@ -445,7 +445,7 @@ func (t *Template) getValue(k string) []byte {
 
 	// . never looks up outside of a block
 	if k == "." {
-		return []byte{}
+		return nil
 	}
 	if v := t.Data.Get(k); v != nil {
 		return v.Bytes()
