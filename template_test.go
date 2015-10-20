@@ -469,6 +469,43 @@ func TestTemplatePartialFuncIsNil(t *testing.T) {
 		And(errorIs(errInvalidPartialFunc))
 }
 
+func TestTemplatePartialInBlock(t *testing.T) {
+	html := `<h1>{{#a}}{{>b}}{{f}}{{/a}}</h1>`
+	data := map[string]interface{}{
+		"a": map[string]interface{}{
+			"c": "Hello",
+			"e": "World",
+			"f": "!",
+		},
+	}
+
+	var exp = `<h1>Hello World!</h1>`
+
+	tmpl := &Template{
+		File: bytes.NewReader([]byte(html)),
+		Data: &Data{Value: data},
+	}
+	tmpl.Partial(func(path string) (io.Reader, error) {
+		var p []byte
+		switch path {
+		case "b":
+			p = []byte(`{{c}}{{>d}}`)
+		case "d":
+			p = []byte(` {{e}}`)
+
+		default:
+			t.Errorf("invalid partial %s", path)
+		}
+
+		return bytes.NewReader(p), nil
+	})
+
+	Asser{t}.
+		Given(a(tmpl)).
+		Then(bodyEquals(exp)).
+		And(errorIs(nil))
+}
+
 func TestTemplateVarsContainSpaces(t *testing.T) {
 	html := `<h1>{{a }}{{ > b }}{{ e}}</h1>`
 	data := map[string]interface{}{

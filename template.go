@@ -50,6 +50,9 @@ type Template struct {
 	// partial holds the reference to the current partial. This will be nil'd
 	// when the partial has been completely rendered.
 	partial io.Reader
+
+	// parent is a reference to the parent Template for a partial
+	parent *Template
 }
 
 var _ io.Reader = &Template{}
@@ -420,6 +423,11 @@ func (t *Template) newPartial(path string) (io.Reader, error) {
 
 		r = te
 	}
+	if te, ok := r.(*Template); ok {
+		te.parent = t
+
+		// r = te // NOTE you apparenlty don't have to set this, cool
+	}
 
 	return r, nil
 }
@@ -439,6 +447,9 @@ func (t *Template) getValue(k string) []byte {
 		if v := bl.Data().Get(k); v != nil {
 			return v.Bytes()
 		}
+	}
+	if t.parent != nil {
+		return t.parent.getValue(k)
 	}
 
 	// . never looks up outside of a block
