@@ -321,7 +321,9 @@ func (t *Template) handleVar(v []byte) ([]byte, error) {
 
 		return nil, nil
 	}
-	// TODO how to handle/detect unclosed blocks
+
+	// TODO how to handle/detect unclosed blocks earlier than at the end of the
+	// read cycles.
 
 	val := t.getValue(tag)
 	if esc {

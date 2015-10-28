@@ -369,7 +369,6 @@ Layouts, under the hood, leverage the existing partial syntax and use a special 
 
 ## TODO
 
-- [ ] Flush out any remaining error checks/handling
 - [ ] `func` support
 - [ ] named blocks 
 
