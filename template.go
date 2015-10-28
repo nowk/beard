@@ -289,8 +289,8 @@ func (t *Template) handleVar(v []byte) ([]byte, error) {
 		if bl == nil {
 			return nil, errNilBlock
 		}
-		if bl.tag != tag {
-			// TODO error: non-matching block
+		if bl.tag[1:] != tag[1:] {
+			return nil, errBlockMismatch
 		}
 		if bl.Increment(); bl.Finished() {
 			t.popBlock()
@@ -508,5 +508,6 @@ var (
 	errInvalidPartialFunc = errors.New("partial func is undefined")
 	errUnclosedBlocks     = errors.New("unclosed blocks")
 	errNilBlock           = errors.New("nil block")
+	errBlockMismatch      = errors.New("block mismatch")
 	errEmptyTag           = errors.New("empty tag")
 )
