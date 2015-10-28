@@ -103,7 +103,7 @@ func (d *Data) Bytes() []byte {
 func getValue(path string, source interface{}) interface{} {
 	tr, br := splitpath(path)
 	if tr == "" {
-		// TODO handle a is blank
+		return nil
 	}
 
 	v, ok := source.(reflect.Value)

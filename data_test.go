@@ -118,6 +118,7 @@ func TestDataGetUnknownPath(t *testing.T) {
 		"a.b",
 		"b.d",
 		"b.c.d",
+		"",
 	} {
 		b := d.Get(v)
 		if b != nil {
