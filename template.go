@@ -269,7 +269,7 @@ func (t *Template) swapDelim() {
 func (t *Template) handleVar(v []byte) ([]byte, error) {
 	tag := string(cleanSpaces(v))
 	if len(tag) == 0 {
-		// TODO handle if tag is empty
+		return nil, errEmptyTag
 	}
 
 	esc := true
@@ -507,4 +507,5 @@ func closePartial(par interface{}) {
 var (
 	errInvalidPartialFunc = errors.New("partial func is undefined")
 	errUnclosedBlocks     = errors.New("unclosed blocks")
+	errEmptyTag           = errors.New("empty tag")
 )

@@ -636,6 +636,22 @@ func TestTemplateErrorsUnclosedBlock(t *testing.T) {
 		And(errorIs(errUnclosedBlocks))
 }
 
+func TestTemplateErrorEmptyTag(t *testing.T) {
+	html := `<h1>{{}}</h1>`
+
+	var exp = `<h1>`
+
+	tmpl := &Template{
+		File: bytes.NewReader([]byte(html)),
+		Data: nil,
+	}
+
+	Asser{t}.
+		Given(a(tmpl)).
+		Then(bodyEquals(exp)).
+		And(errorIs(errEmptyTag))
+}
+
 var a = func(tmpl *Template) StepFunc {
 	return func(t testing.TB, ctx Context) {
 		var buffer = make([]byte, 0, 32)
