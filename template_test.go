@@ -216,7 +216,7 @@ func TestTemplateArrayInPath(t *testing.T) {
 }
 
 func TestTemplateObjectBlock(t *testing.T) {
-	html := `<h1>{{#greeting}}{{a}} {{b}}{{c.d}}{{/gretting}}</h1>`
+	html := `<h1>{{#greeting}}{{a}} {{b}}{{c.d}}{{/greeting}}</h1>`
 	data := map[string]interface{}{
 		"greeting": map[string]interface{}{
 			"a": "Hello",
