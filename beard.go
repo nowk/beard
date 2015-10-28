@@ -1,6 +1,7 @@
 package beard
 
 import (
+	"errors"
 	"io"
 )
 
@@ -37,7 +38,8 @@ func yieldFunc(r io.Reader) PartialFunc {
 			return r, nil
 		}
 
-		// TODO should we error here?
-		return nil, nil
+		return nil, errInvalidYieldTag
 	}
 }
+
+var errInvalidYieldTag = errors.New("invalid yield tag")
