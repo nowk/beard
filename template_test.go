@@ -706,6 +706,23 @@ func TestTemplateErrorMismatchBlock(t *testing.T) {
 	}
 }
 
+func TestTemplateBlockNoData(t *testing.T) {
+	html := `<h1>{{#words}}{{.}}{{/words}}</h1>`
+	data := map[string]interface{}{}
+
+	var exp = `<h1></h1>`
+
+	tmpl := &Template{
+		File: bytes.NewReader([]byte(html)),
+		Data: &Data{Value: data},
+	}
+
+	Asser{t}.
+		Given(a(tmpl)).
+		Then(bodyEquals(exp)).
+		And(errorIs(nil))
+}
+
 var a = func(tmpl *Template) StepFunc {
 	return func(t testing.TB, ctx Context) {
 		var buffer = make([]byte, 0, 32)

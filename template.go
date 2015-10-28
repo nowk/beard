@@ -337,11 +337,7 @@ func (t *Template) newBlock(tag string, c int) *block {
 		return bl
 	}
 
-	d := t.Data.Get(tag[1:])
-	if d == nil {
-		// TODO handle
-	}
-	bl = newBlock(tag, c, d)
+	bl = newBlock(tag, c, t.Data.Get(tag[1:]))
 
 	// lazy alloc
 	if t.blocks == nil {
