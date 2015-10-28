@@ -652,6 +652,33 @@ func TestTemplateErrorEmptyTag(t *testing.T) {
 		And(errorIs(errEmptyTag))
 }
 
+func TestTemplateErrorNilBlock(t *testing.T) {
+	html := `<h1>{{#words}}{{.}}{{/words}}</h1>`
+	data := map[string]interface{}{
+		"words": []string{"a"},
+	}
+
+	tmpl := &Template{
+		File: bytes.NewReader([]byte(html)),
+		Data: &Data{Value: data},
+	}
+
+	b := make([]byte, 19)
+
+	tmpl.Read(b)
+	tmpl.Read(b)
+	tmpl.Read(b)
+	tmpl.Read(b)
+	tmpl.Read(b)
+
+	tmpl.blocks[0] = nil
+
+	_, err := tmpl.Read(b)
+	if err != errNilBlock {
+		t.Errorf("expected no error, got %s", err)
+	}
+}
+
 var a = func(tmpl *Template) StepFunc {
 	return func(t testing.TB, ctx Context) {
 		var buffer = make([]byte, 0, 32)

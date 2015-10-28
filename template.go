@@ -287,7 +287,7 @@ func (t *Template) handleVar(v []byte) ([]byte, error) {
 	case '/':
 		_, bl := t.currentBlock()
 		if bl == nil {
-			// TODO error: invalid block
+			return nil, errNilBlock
 		}
 		if bl.tag != tag {
 			// TODO error: non-matching block
@@ -507,5 +507,6 @@ func closePartial(par interface{}) {
 var (
 	errInvalidPartialFunc = errors.New("partial func is undefined")
 	errUnclosedBlocks     = errors.New("unclosed blocks")
+	errNilBlock           = errors.New("nil block")
 	errEmptyTag           = errors.New("empty tag")
 )
