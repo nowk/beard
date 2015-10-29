@@ -208,25 +208,6 @@ func (t *Template) Partial(fn PartialFunc) {
 	t.partialFunc = fn
 }
 
-func (t *Template) readPartial(p []byte) (int, error) {
-	n, err := t.partial.Read(p)
-	if err == nil {
-		return n, nil
-	}
-
-	// we are in charge of explicitly closing partial source, if we get a closer
-	defer closePartial(t.partial)
-
-	if err != io.EOF {
-		return n, err
-	}
-
-	t.partial = nil
-
-	return n, io.EOF
-
-}
-
 // flush writes truncated out to p. It writes up to the lesser of the two
 // lengths, p vs truncd. It returns any remaing bytes that couldn't be written
 // due to length constraints.
@@ -333,6 +314,58 @@ func (t *Template) handleVar(v []byte) ([]byte, error) {
 	return val, nil
 }
 
+// getValue looks up the value within Data map. It will iterrate *up* the blocks
+// before looking at the root Data field itself.
+func (t *Template) getValue(k string) []byte {
+	z := len(t.blocks)
+	for ; z > 0; z-- {
+		bl := t.blocks[z-1]
+		if bl.Skip() {
+			return nil
+		}
+		if bl.Inverted() {
+			continue
+		}
+		if v := bl.Data().Get(k); v != nil {
+			return v.Bytes()
+		}
+	}
+	if t.parent != nil {
+		return t.parent.getValue(k)
+	}
+
+	// . never looks up outside of a block
+	if k == "." {
+		return nil
+	}
+	if v := t.Data.Get(k); v != nil {
+		return v.Bytes()
+	}
+
+	return nil
+}
+
+// cleanSpaces removes all spaces by shifting over the spaces allow us to return
+// a space clean version without allocating
+func cleanSpaces(b []byte) []byte {
+	lenb := len(b)
+
+	j := 0 // track i minus spaces
+	i := 0
+	for ; i < lenb; i++ {
+		c := b[i]
+		if c == ' ' {
+			continue
+		}
+
+		b[j] = c
+
+		j++
+	}
+
+	return b[:j]
+}
+
 func (t *Template) newBlock(tag string, c int) *block {
 	bl := t.findBlock(tag, c)
 	if bl != nil {
@@ -430,56 +463,23 @@ func (t *Template) newPartial(path string) (io.Reader, error) {
 	return r, nil
 }
 
-// getValue looks up the value within Data map. It will iterrate *up* the blocks
-// before looking at the root Data field itself.
-func (t *Template) getValue(k string) []byte {
-	z := len(t.blocks)
-	for ; z > 0; z-- {
-		bl := t.blocks[z-1]
-		if bl.Skip() {
-			return nil
-		}
-		if bl.Inverted() {
-			continue
-		}
-		if v := bl.Data().Get(k); v != nil {
-			return v.Bytes()
-		}
-	}
-	if t.parent != nil {
-		return t.parent.getValue(k)
+func (t *Template) readPartial(p []byte) (int, error) {
+	n, err := t.partial.Read(p)
+	if err == nil {
+		return n, nil
 	}
 
-	// . never looks up outside of a block
-	if k == "." {
-		return nil
-	}
-	if v := t.Data.Get(k); v != nil {
-		return v.Bytes()
-	}
+	// we are in charge of explicitly closing partial source, if we get a closer
+	defer closePartial(t.partial)
 
-	return nil
-}
-
-// cleanSpaces removes all spaces by shifting over the spaces allow us to return
-// a space clean version without allocating
-func cleanSpaces(b []byte) []byte {
-	lenb := len(b)
-
-	j := 0 // track i minus spaces
-	i := 0
-	for ; i < lenb; i++ {
-		c := b[i]
-		if c == ' ' {
-			continue
-		}
-
-		b[j] = c
-
-		j++
+	if err != io.EOF {
+		return n, err
 	}
 
-	return b[:j]
+	t.partial = nil
+
+	return n, io.EOF
+
 }
 
 func closePartial(par interface{}) {
