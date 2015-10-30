@@ -1,5 +1,8 @@
 # beard
 
+[![Build Status](https://travis-ci.org/nowk/beard.svg?branch=master)](https://travis-ci.org/nowk/beard)
+[![GoDoc](https://godoc.org/github.com/nowk/beard?status.svg)](http://godoc.org/github.com/nowk/beard)
+
 Mustache inspired templates in Go.
 
 ## Install
