@@ -615,6 +615,60 @@ func TestTemplateInvertedBlockDoesNotTraverseUp(t *testing.T) {
 		And(errorIs(nil))
 }
 
+func TestTemplateBlockAs(t *testing.T) {
+	{
+		var html = `{{#words as word}}{{word}}{{/words}}`
+
+		data := map[string]interface{}{
+			"words": []string{
+				"a", "b", "c",
+			},
+		}
+
+		tmpl := &Template{
+			File: bytes.NewReader([]byte(html)),
+			Data: &Data{Value: data},
+		}
+
+		var exp = "abc"
+
+		Asser{t}.
+			Given(a(tmpl)).
+			Then(bodyEquals(exp)).
+			And(errorIs(nil))
+	}
+
+	{
+		var html = `{{#words as word}}{{word.value}}{{/words}}`
+
+		data := map[string]interface{}{
+			"words": []map[string]interface{}{
+				map[string]interface{}{
+					"value": "a",
+				},
+				map[string]interface{}{
+					"value": "b",
+				},
+				map[string]interface{}{
+					"value": "c",
+				},
+			},
+		}
+
+		tmpl := &Template{
+			File: bytes.NewReader([]byte(html)),
+			Data: &Data{Value: data},
+		}
+
+		var exp = "abc"
+
+		Asser{t}.
+			Given(a(tmpl)).
+			Then(bodyEquals(exp)).
+			And(errorIs(nil))
+	}
+}
+
 func TestTemplateErrorsUnclosedBlock(t *testing.T) {
 	html := `<h1>{{#words}}({{.}})</h1>`
 	data := map[string]interface{}{

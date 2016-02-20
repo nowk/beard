@@ -82,3 +82,100 @@ func Test_blockgetValuePathOnSlice(t *testing.T) {
 		}
 	}
 }
+
+func Test_blockgetValueAsOnSimpleArray(t *testing.T) {
+	bl := newBlock("chars", 0, &Data{Value: []string{
+		"a", "b",
+	}})
+	bl.As("char")
+
+	{
+		var (
+			exp = "a"
+			got = string(bl.Data().Get("char").Bytes())
+		)
+		if exp != got {
+			t.Errorf("expected %s, got %s", exp, got)
+		}
+	}
+
+	bl.Increment()
+
+	{
+		var (
+			exp = "b"
+			got = string(bl.Data().Get("char").Bytes())
+		)
+		if exp != got {
+			t.Errorf("expected %s, got %s", exp, got)
+		}
+	}
+}
+
+func Test_blockgetValueAsOnArrayOfObject(t *testing.T) {
+	bl := newBlock("chars", 0, &Data{Value: []interface{}{
+		map[string]interface{}{
+			"value": "a",
+		},
+		map[string]interface{}{
+			"value": "b",
+		},
+	}})
+	bl.As("char")
+
+	{
+		var (
+			exp = "a"
+			got = string(bl.Data().Get("char.value").Bytes())
+		)
+		if exp != got {
+			t.Errorf("expected %s, got %s", exp, got)
+		}
+	}
+
+	bl.Increment()
+
+	{
+		var (
+			exp = "b"
+			got = string(bl.Data().Get("char.value").Bytes())
+		)
+		if exp != got {
+			t.Errorf("expected %s, got %s", exp, got)
+		}
+	}
+}
+
+func Test_blockgetValueAsEquaTag(t *testing.T) {
+	bl := newBlock("char", 0, &Data{Value: []interface{}{
+		map[string]interface{}{
+			"value": "a",
+		},
+		map[string]interface{}{
+			"value": "b",
+		},
+	}})
+	bl.As("char")
+
+	{
+		var (
+			exp = "a"
+			got = string(bl.Data().Get("char.value").Bytes())
+		)
+		if exp != got {
+			t.Errorf("expected %s, got %s", exp, got)
+		}
+	}
+
+	bl.Increment()
+
+	{
+		var (
+			exp = "b"
+			got = string(bl.Data().Get("char.value").Bytes())
+		)
+		if exp != got {
+			t.Errorf("expected %s, got %s", exp, got)
+		}
+	}
+}

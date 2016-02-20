@@ -10,16 +10,22 @@ import (
 type Data struct {
 	Value interface{}
 
+	as string
+
 	// valueOf is a cache of value's reflect.Value
 	valueOf *reflect.Value
 }
 
+func (d *Data) As(as string) {
+	d.as = as
+}
+
 func (d *Data) Get(k string) *Data {
 	// dot notations just returns itself
-	if k == "." {
+	if k == "." || (d.as != "" && d.as == k) {
 		return d
 	}
-	if v := getValue(k, d.Value); v != nil {
+	if v := d.getValue(k, d.Value); v != nil {
 		return &Data{
 			Value: v,
 		}
@@ -100,7 +106,11 @@ func (d *Data) Bytes() []byte {
 // getValue finds the value of the path within source.
 // The path can be represented as a json path, eg a.b.c and will traverse the
 // source to find said path.
-func getValue(path string, source interface{}) interface{} {
+func (d *Data) getValue(path string, source interface{}) interface{} {
+	i := strings.Index(path, d.as+".")
+	if i == 0 {
+		path = path[len(d.as)+1:]
+	}
 	tr, br := splitpath(path)
 	if tr == "" {
 		return nil
@@ -135,7 +145,7 @@ func getValue(path string, source interface{}) interface{} {
 	}
 
 	if br != "" {
-		return getValue(br, inf)
+		return d.getValue(br, inf)
 	}
 
 	return inf

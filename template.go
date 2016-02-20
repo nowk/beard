@@ -248,7 +248,11 @@ func (t *Template) swapDelim() {
 }
 
 func (t *Template) handleVar(v []byte) ([]byte, error) {
-	tag := string(cleanSpaces(v))
+	var (
+		key, as = parseTag(v)
+
+		tag = string(cleanSpaces(key))
+	)
 	if len(tag) == 0 {
 		return nil, errEmptyTag
 	}
@@ -257,7 +261,7 @@ func (t *Template) handleVar(v []byte) ([]byte, error) {
 
 	switch tag[0] {
 	case '#', '^':
-		bl := t.newBlock(tag, t.cursor)
+		bl := t.newBlock(tag, string(as), t.cursor)
 		// bl := t.newBlock(tag, t.cursor-(len(v)+len(rdelim)+len(ldelim)))
 		if bl == nil {
 			// TODO not sure how this can actually happen...?
@@ -366,13 +370,14 @@ func cleanSpaces(b []byte) []byte {
 	return b[:j]
 }
 
-func (t *Template) newBlock(tag string, c int) *block {
+func (t *Template) newBlock(tag, as string, c int) *block {
 	bl := t.findBlock(tag, c)
 	if bl != nil {
 		return bl
 	}
 
 	bl = newBlock(tag, c, t.Data.Get(tag[1:]))
+	bl.as = as
 
 	// lazy alloc
 	if t.blocks == nil {
@@ -480,6 +485,17 @@ func (t *Template) readPartial(p []byte) (int, error) {
 
 	return n, io.EOF
 
+}
+
+var as_delim = []byte(" as ")
+
+func parseTag(tag []byte) ([]byte, []byte) {
+	i := bytes.Index(tag, as_delim)
+	if i == -1 {
+		return tag, nil
+	}
+
+	return tag[:i], bytes.TrimSpace(tag[i+4:])
 }
 
 func closePartial(par interface{}) {
