@@ -2,7 +2,7 @@ package beard
 
 type block struct {
 	tag    string
-	as     string
+	as     []string
 	cursor int
 	data   *Data
 
@@ -17,7 +17,7 @@ func newBlock(tag string, c int, data *Data) *block {
 	}
 }
 
-func (b *block) As(as string) {
+func (b *block) As(as ...string) {
 	b.as = as
 }
 
@@ -34,7 +34,9 @@ func (b *block) Data() *Data {
 		data = b.data
 	}
 
-	data.As(b.as)
+	data.As(b.as...)
+
+	data.i = b.iterd
 
 	return data
 }

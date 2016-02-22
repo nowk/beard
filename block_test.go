@@ -205,3 +205,92 @@ func Test_blockgetValueAsKeyIsEqualToTag(t *testing.T) {
 		}
 	}
 }
+
+// FIXME this test will fail randomly as maps are not order set like arrays
+func Test_blockAsGetKeyOnMapr(t *testing.T) {
+	bl := newBlock("char", 0, &Data{Value: map[string]interface{}{
+		"a": "b",
+		"c": "d",
+		"e": "f",
+	}})
+	bl.As("k", "v")
+
+	{
+		var (
+			exp = "a"
+			got = string(bl.Data().Get("k").Bytes())
+		)
+		if exp != got {
+			t.Errorf("expected %s, got %s", exp, got)
+		}
+	}
+
+	bl.Increment()
+
+	{
+		var (
+			exp = "c"
+			got = string(bl.Data().Get("k").Bytes())
+		)
+		if exp != got {
+			t.Errorf("expected %s, got %s", exp, got)
+		}
+	}
+
+	bl.Increment()
+
+	{
+		var (
+			exp = "e"
+			got = string(bl.Data().Get("k").Bytes())
+		)
+		if exp != got {
+			t.Errorf("expected %s, got %s", exp, got)
+		}
+	}
+}
+
+func Test_blockAsGetKeyOnMStruct(t *testing.T) {
+	type s struct {
+		a string
+		c string
+		e string
+	}
+
+	bl := newBlock("char", 0, &Data{Value: s{}})
+	bl.As("k", "v")
+
+	{
+		var (
+			exp = "a"
+			got = string(bl.Data().Get("k").Bytes())
+		)
+		if exp != got {
+			t.Errorf("expected %s, got %s", exp, got)
+		}
+	}
+
+	bl.Increment()
+
+	{
+		var (
+			exp = "c"
+			got = string(bl.Data().Get("k").Bytes())
+		)
+		if exp != got {
+			t.Errorf("expected %s, got %s", exp, got)
+		}
+	}
+
+	bl.Increment()
+
+	{
+		var (
+			exp = "e"
+			got = string(bl.Data().Get("k").Bytes())
+		)
+		if exp != got {
+			t.Errorf("expected %s, got %s", exp, got)
+		}
+	}
+}

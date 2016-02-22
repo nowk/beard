@@ -669,6 +669,30 @@ func TestTemplateBlockAs(t *testing.T) {
 	}
 }
 
+func TestTemplateBlockAsKeyValue(t *testing.T) {
+	var html = `{{#words as k, v}}{{k}}{{/words}}`
+
+	data := map[string]interface{}{
+		"words": map[string]interface{}{
+			"a": "b",
+			"c": "d",
+			"e": "f",
+		},
+	}
+
+	tmpl := &Template{
+		File: bytes.NewReader([]byte(html)),
+		Data: &Data{Value: data},
+	}
+
+	var exp = "ace"
+
+	Asser{t}.
+		Given(a(tmpl)).
+		Then(bodyEquals(exp)).
+		And(errorIs(nil))
+}
+
 func TestTemplateErrorsUnclosedBlock(t *testing.T) {
 	html := `<h1>{{#words}}({{.}})</h1>`
 	data := map[string]interface{}{
