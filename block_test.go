@@ -146,7 +146,7 @@ func Test_blockgetValueAsOnArrayOfObject(t *testing.T) {
 	}
 }
 
-func Test_blockgetValueAsEquaTag(t *testing.T) {
+func Test_blockgetValueAsKeyIsEqualToTag(t *testing.T) {
 	bl := newBlock("char", 0, &Data{Value: []interface{}{
 		map[string]interface{}{
 			"value": "a",
