@@ -48,6 +48,32 @@ func Test_blockgetValueDotOnSlice(t *testing.T) {
 	}
 }
 
+func Test_blockgetValueOnMap(t *testing.T) {
+	bl := newBlock("", 0, &Data{Value: map[string]interface{}{
+		"a": "b",
+		"c": "d",
+	}})
+
+	{
+		var (
+			exp = "b"
+			got = string(bl.Data().Get("a").Bytes())
+		)
+		if exp != got {
+			t.Errorf("expected %s, got %s", exp, got)
+		}
+	}
+	{
+		var (
+			exp = "d"
+			got = string(bl.Data().Get("c").Bytes())
+		)
+		if exp != got {
+			t.Errorf("expected %s, got %s", exp, got)
+		}
+	}
+}
+
 func Test_blockgetValuePathOnSlice(t *testing.T) {
 	bl := newBlock("", 0, &Data{Value: []interface{}{
 		map[string]interface{}{
