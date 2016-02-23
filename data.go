@@ -3,6 +3,7 @@ package beard
 import (
 	"fmt"
 	"reflect"
+	"sort"
 	"strconv"
 	"strings"
 )
@@ -39,10 +40,14 @@ func (d *Data) As(as ...string) {
 }
 
 func (d *Data) Get(k string) *Data {
-	if d.isKeyValue && d.k == k {
+	if d.isKeyValue && d.k != "" && d.k == k {
 		return &Data{
-			Value: d.getKey(k),
+			Value: d.getKey(d.k),
 		}
+	}
+
+	if d.isKeyValue && d.as != "" && d.as == k {
+		k = d.getKey(d.k).(reflect.Value).String()
 	}
 
 	// dot notations just returns itself
@@ -156,6 +161,38 @@ func (d *Data) Bytes() []byte {
 	return nil
 }
 
+var keyName = func(r1, r2 *reflect.Value) bool {
+	return r1.String() < r2.String()
+}
+
+type by func(*reflect.Value, *reflect.Value) bool
+
+func (b by) Sort(r []reflect.Value) {
+	s := &keySorter{
+		keys: r,
+		by:   b,
+	}
+
+	sort.Sort(s)
+}
+
+type keySorter struct {
+	keys []reflect.Value
+	by   by
+}
+
+func (k *keySorter) Len() int {
+	return len(k.keys)
+}
+
+func (k *keySorter) Swap(i, j int) {
+	k.keys[i], k.keys[j] = k.keys[j], k.keys[i]
+}
+
+func (k *keySorter) Less(i, j int) bool {
+	return k.by(&k.keys[i], &k.keys[j])
+}
+
 func (d *Data) getKey(k string) interface{} {
 	val, ok := d.Value.(reflect.Value)
 	if !ok {
@@ -172,7 +209,11 @@ func (d *Data) getKey(k string) interface{} {
 		// save keys to struct and access keys via saved value, else we run into
 		// issues with map keys not maintaining order.
 		if d.keys == nil {
-			d.keys = val.MapKeys()
+			keys := val.MapKeys()
+
+			by(keyName).Sort(keys)
+
+			d.keys = keys
 		}
 
 		v = d.keys[d.i]

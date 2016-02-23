@@ -496,7 +496,7 @@ func parseTag(tag []byte) ([]byte, []string) {
 		return tag, nil
 	}
 
-	as := string(bytes.TrimSpace(tag[i+4:]))
+	as := string(bytes.TrimSpace(cleanSpaces(tag[i+4:])))
 	if len(as) == 0 {
 		return tag, nil
 	}

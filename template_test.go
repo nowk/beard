@@ -670,7 +670,7 @@ func TestTemplateBlockAs(t *testing.T) {
 }
 
 func TestTemplateBlockAsKeyValue(t *testing.T) {
-	var html = `{{#words as k, v}}{{k}}{{/words}}`
+	var html = `{{#words as k, v}}{{k}}:{{v}}{{/words}}`
 
 	data := map[string]interface{}{
 		"words": map[string]interface{}{
@@ -685,7 +685,7 @@ func TestTemplateBlockAsKeyValue(t *testing.T) {
 		Data: &Data{Value: data},
 	}
 
-	var exp = "ace"
+	var exp = "a:bc:de:f"
 
 	Asser{t}.
 		Given(a(tmpl)).
