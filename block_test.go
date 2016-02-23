@@ -109,7 +109,7 @@ func Test_blockgetValuePathOnSlice(t *testing.T) {
 	}
 }
 
-func Test_blockgetValueAsOnSimpleArray(t *testing.T) {
+func Test_blockAsgetValueOnArray(t *testing.T) {
 	bl := newBlock("chars", 0, &Data{Value: []string{
 		"a", "b",
 	}})
@@ -138,7 +138,7 @@ func Test_blockgetValueAsOnSimpleArray(t *testing.T) {
 	}
 }
 
-func Test_blockgetValueAsOnArrayOfObject(t *testing.T) {
+func Test_blockAsgetValueWithAsAsRootPath(t *testing.T) {
 	bl := newBlock("chars", 0, &Data{Value: []interface{}{
 		map[string]interface{}{
 			"value": "a",
@@ -172,7 +172,7 @@ func Test_blockgetValueAsOnArrayOfObject(t *testing.T) {
 	}
 }
 
-func Test_blockgetValueAsKeyIsEqualToTag(t *testing.T) {
+func Test_blockAsgetValueWhereAsAsRootPathEqualsTag(t *testing.T) {
 	bl := newBlock("char", 0, &Data{Value: []interface{}{
 		map[string]interface{}{
 			"value": "a",
@@ -206,7 +206,7 @@ func Test_blockgetValueAsKeyIsEqualToTag(t *testing.T) {
 	}
 }
 
-func Test_blockAsGetKeyOnMap(t *testing.T) {
+func Test_blockAsKeyValuegetKeyOnMap(t *testing.T) {
 	bl := newBlock("char", 0, &Data{Value: map[string]interface{}{
 		"a": "b",
 		"c": "d",
@@ -249,7 +249,7 @@ func Test_blockAsGetKeyOnMap(t *testing.T) {
 	}
 }
 
-func Test_blockAsGetValueOnMap(t *testing.T) {
+func Test_blockAsKeyValuegetValueOnMap(t *testing.T) {
 	bl := newBlock("char", 0, &Data{Value: map[string]interface{}{
 		"a": "b",
 		"c": "d",
@@ -292,47 +292,52 @@ func Test_blockAsGetValueOnMap(t *testing.T) {
 	}
 }
 
-func Test_blockAsGetKeyOnMStruct(t *testing.T) {
+func Test_blockAsKeyValuegetKeyOnStruct(t *testing.T) {
 	type s struct {
 		a string
 		c string
 		e string
 	}
 
-	bl := newBlock("char", 0, &Data{Value: s{}})
-	bl.As("k", "v")
+	for _, v := range []interface{}{
+		s{},
+		&s{},
+	} {
+		bl := newBlock("char", 0, &Data{Value: v})
+		bl.As("k", "v")
 
-	{
-		var (
-			exp = "a"
-			got = string(bl.Data().Get("k").Bytes())
-		)
-		if exp != got {
-			t.Errorf("expected %s, got %s", exp, got)
+		{
+			var (
+				exp = "a"
+				got = string(bl.Data().Get("k").Bytes())
+			)
+			if exp != got {
+				t.Errorf("expected %s, got %s", exp, got)
+			}
 		}
-	}
 
-	bl.Increment()
+		bl.Increment()
 
-	{
-		var (
-			exp = "c"
-			got = string(bl.Data().Get("k").Bytes())
-		)
-		if exp != got {
-			t.Errorf("expected %s, got %s", exp, got)
+		{
+			var (
+				exp = "c"
+				got = string(bl.Data().Get("k").Bytes())
+			)
+			if exp != got {
+				t.Errorf("expected %s, got %s", exp, got)
+			}
 		}
-	}
 
-	bl.Increment()
+		bl.Increment()
 
-	{
-		var (
-			exp = "e"
-			got = string(bl.Data().Get("k").Bytes())
-		)
-		if exp != got {
-			t.Errorf("expected %s, got %s", exp, got)
+		{
+			var (
+				exp = "e"
+				got = string(bl.Data().Get("k").Bytes())
+			)
+			if exp != got {
+				t.Errorf("expected %s, got %s", exp, got)
+			}
 		}
 	}
 }
