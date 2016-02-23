@@ -33,10 +33,9 @@ func (b *block) Data() *Data {
 	} else {
 		data = b.data
 	}
-
-	data.As(b.as...)
-
+	data.block = b
 	data.i = b.iterd
+	data.As(b.as...)
 
 	return data
 }

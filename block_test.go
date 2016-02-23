@@ -391,3 +391,147 @@ func Test_blockAsKeyValuegetValueOnStruct(t *testing.T) {
 		}
 	}
 }
+
+func Test_blockAsKeyValueOnArrayKeyReturnsIndex(t *testing.T) {
+	bl := newBlock("", 0, &Data{Value: []interface{}{
+		"a", "b", "c",
+	}})
+	bl.As("i", "v")
+
+	{
+		var (
+			exp = "0"
+			got = string(bl.Data().Get("i").Bytes())
+		)
+		if exp != got {
+			t.Errorf("expected %s, got %s", exp, got)
+		}
+	}
+	{
+		var (
+			exp = "a"
+			got = string(bl.Data().Get("v").Bytes())
+		)
+		if exp != got {
+			t.Errorf("expected %s, got %s", exp, got)
+		}
+	}
+
+	bl.Increment()
+
+	{
+		var (
+			exp = "1"
+			got = string(bl.Data().Get("i").Bytes())
+		)
+		if exp != got {
+			t.Errorf("expected %s, got %s", exp, got)
+		}
+	}
+	{
+		var (
+			exp = "b"
+			got = string(bl.Data().Get("v").Bytes())
+		)
+		if exp != got {
+			t.Errorf("expected %s, got %s", exp, got)
+		}
+	}
+
+	bl.Increment()
+
+	{
+		var (
+			exp = "2"
+			got = string(bl.Data().Get("i").Bytes())
+		)
+		if exp != got {
+			t.Errorf("expected %s, got %s", exp, got)
+		}
+	}
+	{
+		var (
+			exp = "c"
+			got = string(bl.Data().Get("v").Bytes())
+		)
+		if exp != got {
+			t.Errorf("expected %s, got %s", exp, got)
+		}
+	}
+}
+
+func Test_blockAsKeyValueOnArrayOfMapsKeyReturnsIndex(t *testing.T) {
+	bl := newBlock("", 0, &Data{Value: []interface{}{
+		map[string]interface{}{
+			"value": "a",
+		},
+		map[string]interface{}{
+			"value": "b",
+		},
+		map[string]interface{}{
+			"value": "c",
+		},
+	}})
+	bl.As("i", "v")
+
+	{
+		var (
+			exp = "0"
+			got = string(bl.Data().Get("i").Bytes())
+		)
+		if exp != got {
+			t.Errorf("expected %s, got %s", exp, got)
+		}
+	}
+	{
+		var (
+			exp = "a"
+			got = string(bl.Data().Get("v.value").Bytes())
+		)
+		if exp != got {
+			t.Errorf("expected %s, got %s", exp, got)
+		}
+	}
+
+	bl.Increment()
+
+	{
+		var (
+			exp = "1"
+			got = string(bl.Data().Get("i").Bytes())
+		)
+		if exp != got {
+			t.Errorf("expected %s, got %s", exp, got)
+		}
+	}
+	{
+		var (
+			exp = "b"
+			got = string(bl.Data().Get("v.value").Bytes())
+		)
+		if exp != got {
+			t.Errorf("expected %s, got %s", exp, got)
+		}
+	}
+
+	bl.Increment()
+
+	{
+		var (
+			exp = "2"
+			got = string(bl.Data().Get("i").Bytes())
+		)
+		if exp != got {
+			t.Errorf("expected %s, got %s", exp, got)
+		}
+	}
+	{
+		var (
+			exp = "c"
+			got = string(bl.Data().Get("v.value").Bytes())
+		)
+		if exp != got {
+			t.Errorf("expected %s, got %s", exp, got)
+		}
+	}
+}

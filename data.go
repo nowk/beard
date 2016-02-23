@@ -11,6 +11,8 @@ import (
 type Data struct {
 	Value interface{}
 
+	block *block
+
 	k          string
 	as         string
 	isKeyValue bool
@@ -201,9 +203,10 @@ func (k *keySorter) Less(i, j int) bool {
 }
 
 func (d *Data) getKey(k string) interface{} {
-	val, ok := d.Value.(reflect.Value)
+	// look at the parent's data set to figure out the type
+	val, ok := d.block.data.Value.(reflect.Value)
 	if !ok {
-		val = reflect.ValueOf(d.Value)
+		val = reflect.ValueOf(d.block.data.Value)
 	}
 	if val.Kind() == reflect.Ptr {
 		val = val.Elem()
@@ -228,6 +231,10 @@ func (d *Data) getKey(k string) interface{} {
 		f := val.Type().Field(d.i)
 
 		v = f.Name
+
+	default:
+		// we only find keys on maps and structs, all else will return the index
+		v = d.i
 	}
 
 	return v
