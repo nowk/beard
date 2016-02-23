@@ -47,7 +47,14 @@ func (d *Data) Get(k string) *Data {
 	}
 
 	if d.isKeyValue && d.as != "" && d.as == k {
-		k = d.getKey(d.k).(reflect.Value).String()
+		switch v := d.getKey(d.k).(type) {
+		case reflect.Value:
+			k = v.String()
+		case string:
+			k = v
+		default:
+			// TODO handle
+		}
 	}
 
 	// dot notations just returns itself

@@ -341,3 +341,53 @@ func Test_blockAsKeyValuegetKeyOnStruct(t *testing.T) {
 		}
 	}
 }
+
+func Test_blockAsKeyValuegetValueOnStruct(t *testing.T) {
+	type s struct {
+		a string
+		c string
+		e string
+	}
+
+	for _, v := range []interface{}{
+		s{"b", "d", "f"},
+		&s{"b", "d", "f"},
+	} {
+		bl := newBlock("char", 0, &Data{Value: v})
+		bl.As("k", "v")
+
+		{
+			var (
+				exp = "b"
+				got = string(bl.Data().Get("v").Bytes())
+			)
+			if exp != got {
+				t.Errorf("expected %s, got %s", exp, got)
+			}
+		}
+
+		bl.Increment()
+
+		{
+			var (
+				exp = "d"
+				got = string(bl.Data().Get("v").Bytes())
+			)
+			if exp != got {
+				t.Errorf("expected %s, got %s", exp, got)
+			}
+		}
+
+		bl.Increment()
+
+		{
+			var (
+				exp = "f"
+				got = string(bl.Data().Get("v").Bytes())
+			)
+			if exp != got {
+				t.Errorf("expected %s, got %s", exp, got)
+			}
+		}
+	}
+}
