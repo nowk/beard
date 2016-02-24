@@ -377,7 +377,20 @@ func (t *Template) newBlock(tag string, c int, as ...string) *block {
 		return bl
 	}
 
-	bl = newBlock(tag, c, t.Data.Get(tag[1:]))
+	var (
+		data *Data
+
+		_, cb = t.currentBlock()
+	)
+	if cb != nil && len(cb.as) > 0 {
+		// if the current block is As'd, we need to look at this data block for
+		// lookup, as the var will be the 'as' value and not a key in the
+		// original data block
+		data = cb.Data()
+	} else {
+		data = t.Data
+	}
+	bl = newBlock(tag, c, data.Get(tag[1:]))
 	bl.As(as...)
 
 	// lazy alloc
