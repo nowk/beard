@@ -615,6 +615,140 @@ func TestTemplateInvertedBlockDoesNotTraverseUp(t *testing.T) {
 		And(errorIs(nil))
 }
 
+func TestTemplateBlockAs(t *testing.T) {
+	{
+		var html = `{{#words as word}}{{word}}{{/words}}`
+
+		data := map[string]interface{}{
+			"words": []string{
+				"a", "b", "c",
+			},
+		}
+
+		tmpl := &Template{
+			File: bytes.NewReader([]byte(html)),
+			Data: &Data{Value: data},
+		}
+
+		var exp = "abc"
+
+		Asser{t}.
+			Given(a(tmpl)).
+			Then(bodyEquals(exp)).
+			And(errorIs(nil))
+	}
+
+	{
+		var html = `{{#words as word}}{{word.value}}{{/words}}`
+
+		data := map[string]interface{}{
+			"words": []map[string]interface{}{
+				map[string]interface{}{
+					"value": "a",
+				},
+				map[string]interface{}{
+					"value": "b",
+				},
+				map[string]interface{}{
+					"value": "c",
+				},
+			},
+		}
+
+		tmpl := &Template{
+			File: bytes.NewReader([]byte(html)),
+			Data: &Data{Value: data},
+		}
+
+		var exp = "abc"
+
+		Asser{t}.
+			Given(a(tmpl)).
+			Then(bodyEquals(exp)).
+			And(errorIs(nil))
+	}
+}
+
+func TestTemplateBlockAsKeyValue(t *testing.T) {
+	var html = `{{#words as k, v}}{{k}}:{{v}}{{/words}}`
+
+	data := map[string]interface{}{
+		"words": map[string]interface{}{
+			"a": "b",
+			"c": "d",
+			"e": "f",
+		},
+	}
+
+	tmpl := &Template{
+		File: bytes.NewReader([]byte(html)),
+		Data: &Data{Value: data},
+	}
+
+	var exp = "a:bc:de:f"
+
+	Asser{t}.
+		Given(a(tmpl)).
+		Then(bodyEquals(exp)).
+		And(errorIs(nil))
+}
+
+func TestTemplateBlockAsBlockAs(t *testing.T) {
+	var html = `{{#data as k, v}}{{k}}:{{#v as key, val}}{{key}}-{{val}}{{/v}}{{/data}}`
+
+	data := map[string]interface{}{
+		"data": map[string]interface{}{
+			"a": map[string]interface{}{
+				"b": "c",
+				"d": "e",
+			},
+			"f": map[string]interface{}{
+				"g": "h",
+			},
+		},
+	}
+
+	tmpl := &Template{
+		File: bytes.NewReader([]byte(html)),
+		Data: &Data{Value: data},
+	}
+
+	var exp = "a:b-cd-ef:g-h"
+
+	Asser{t}.
+		Given(a(tmpl)).
+		Then(bodyEquals(exp)).
+		And(errorIs(nil))
+}
+
+func TestTemplateBlockAsBlockAs2(t *testing.T) {
+	var html = `{{#data as v}}{{#v as key, val}}{{key}}-{{val}}{{/v}}{{/data}}`
+
+	data := map[string]interface{}{
+		"data": []interface{}{
+			map[string]interface{}{
+				"a": "b",
+				"c": "d",
+			},
+			map[string]interface{}{
+				"e": "f",
+			},
+		},
+	}
+
+	tmpl := &Template{
+		File: bytes.NewReader([]byte(html)),
+		Data: &Data{Value: data},
+	}
+
+	var exp = "a-bc-de-f"
+
+	Asser{t}.
+		Given(a(tmpl)).
+		Then(bodyEquals(exp)).
+		And(errorIs(nil))
+}
+
 func TestTemplateErrorsUnclosedBlock(t *testing.T) {
 	html := `<h1>{{#words}}({{.}})</h1>`
 	data := map[string]interface{}{

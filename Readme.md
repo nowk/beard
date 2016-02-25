@@ -370,19 +370,60 @@ Layouts, under the hood, leverage the existing partial syntax and use a special 
 
 *This is specific to `RenderInLayout` only.*
 
+---
+
+#### Named blocks
+
+On Arrays:
+
+Template:
+
+    {{#words as word}}
+      {{word}}
+    {{/words}}
+
+Data:
+
+    map[string]interface{}{
+      "words": []string{
+        "Hello",
+        " World",
+        "!",
+      },
+    }
+
+Output:
+
+    Hello World!
+
+---
+
+On Maps:
+
+Template:
+
+    {{#post as k, v}}
+      {{k}}: {{v}}\n
+    {{/post}}
+
+Data:
+
+    map[string]interface{}{
+      "post": map[string]interface{}{
+        "title": "Hello World!",
+        "description": "You got mail",
+      },
+    }
+
+Output:
+
+    title: Hello World!
+    description: You got mail
+
+
 ## TODO
 
 - [ ] `func` support
-- [ ] named blocks 
-
-		{{#words each word}}
-			{{word}}
-		{{/words}}
-
-		{{#word as word}}
-			{{word.inEnglish}}
-		{{/word}}
-
 - [ ] a simple way to handle condition logic
 
 

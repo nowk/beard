@@ -2,6 +2,7 @@ package beard
 
 type block struct {
 	tag    string
+	as     []string
 	cursor int
 	data   *Data
 
@@ -16,16 +17,27 @@ func newBlock(tag string, c int, data *Data) *block {
 	}
 }
 
+func (b *block) As(as ...string) {
+	b.as = as
+}
+
 func (b *block) Data() *Data {
 	if b.Skip() {
 		return nil
 	}
-	if b.data.IsSlice() {
-		// get data for current iteration context
-		return b.data.Index(b.iterd)
-	}
 
-	return b.data
+	var data *Data
+
+	if b.data.IsSlice() {
+		data = b.data.Index(b.iterd) // get data for current iteration context
+	} else {
+		data = b.data
+	}
+	data.block = b
+	data.i = b.iterd
+	data.As(b.as...)
+
+	return data
 }
 
 func (b *block) Skip() bool {

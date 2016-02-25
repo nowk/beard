@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"io"
+	"strings"
 )
 
 // File is a ReadSeeker
@@ -248,7 +249,11 @@ func (t *Template) swapDelim() {
 }
 
 func (t *Template) handleVar(v []byte) ([]byte, error) {
-	tag := string(cleanSpaces(v))
+	var (
+		key, as = parseTag(v)
+
+		tag = string(cleanSpaces(key))
+	)
 	if len(tag) == 0 {
 		return nil, errEmptyTag
 	}
@@ -257,7 +262,7 @@ func (t *Template) handleVar(v []byte) ([]byte, error) {
 
 	switch tag[0] {
 	case '#', '^':
-		bl := t.newBlock(tag, t.cursor)
+		bl := t.newBlock(tag, t.cursor, as...)
 		// bl := t.newBlock(tag, t.cursor-(len(v)+len(rdelim)+len(ldelim)))
 		if bl == nil {
 			// TODO not sure how this can actually happen...?
@@ -366,13 +371,27 @@ func cleanSpaces(b []byte) []byte {
 	return b[:j]
 }
 
-func (t *Template) newBlock(tag string, c int) *block {
+func (t *Template) newBlock(tag string, c int, as ...string) *block {
 	bl := t.findBlock(tag, c)
 	if bl != nil {
 		return bl
 	}
 
-	bl = newBlock(tag, c, t.Data.Get(tag[1:]))
+	var (
+		data *Data
+
+		_, cb = t.currentBlock()
+	)
+	if cb != nil && len(cb.as) > 0 {
+		// if the current block is As'd, we need to look at this data block for
+		// lookup, as the var will be the 'as' value and not a key in the
+		// original data block
+		data = cb.Data()
+	} else {
+		data = t.Data
+	}
+	bl = newBlock(tag, c, data.Get(tag[1:]))
+	bl.As(as...)
 
 	// lazy alloc
 	if t.blocks == nil {
@@ -480,6 +499,27 @@ func (t *Template) readPartial(p []byte) (int, error) {
 
 	return n, io.EOF
 
+}
+
+var as_delim = []byte(" as ")
+
+func parseTag(tag []byte) ([]byte, []string) {
+	i := bytes.Index(tag, as_delim)
+	if i == -1 {
+		return tag, nil
+	}
+
+	as := string(bytes.TrimSpace(cleanSpaces(tag[i+4:])))
+	if len(as) == 0 {
+		return tag, nil
+	}
+
+	s := strings.Split(as, ",")
+	if len(s) == 0 {
+		s = []string{as}
+	}
+
+	return tag[:i], s
 }
 
 func closePartial(par interface{}) {
