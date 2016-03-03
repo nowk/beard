@@ -749,6 +749,27 @@ func TestTemplateBlockAsBlockAs2(t *testing.T) {
 		And(errorIs(nil))
 }
 
+// FIXME officially
+func TestTemporaryFixForEmptyAsBlocks(t *testing.T) {
+	var html = `<ul>{{#data as v}}{{#v as key, val}}{{key}}-{{val}}{{/v}}{{/data}}</ul>`
+
+	data := map[string]interface{}{
+		"data": []interface{}{},
+	}
+
+	tmpl := &Template{
+		File: bytes.NewReader([]byte(html)),
+		Data: &Data{Value: data},
+	}
+
+	var exp = "<ul></ul>"
+
+	Asser{t}.
+		Given(a(tmpl)).
+		Then(bodyEquals(exp)).
+		And(errorIs(nil))
+}
+
 func TestTemplateErrorsUnclosedBlock(t *testing.T) {
 	html := `<h1>{{#words}}({{.}})</h1>`
 	data := map[string]interface{}{

@@ -42,6 +42,12 @@ func (d *Data) As(as ...string) {
 }
 
 func (d *Data) Get(k string) *Data {
+	// return if nil...
+	// TODO why can we do this?...
+	if d == nil {
+		return nil
+	}
+
 	if d.isKeyValue && d.k != "" && d.k == k {
 		return &Data{
 			Value: d.getKey(d.k),
